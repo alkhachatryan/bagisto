@@ -868,6 +868,9 @@ return [
         ],
         'development' => [
             'title' => 'تطوير',
+            'tools' => [
+                'webconsole' => 'وحدة تحكم الويب'
+            ]
         ]
     ],
 

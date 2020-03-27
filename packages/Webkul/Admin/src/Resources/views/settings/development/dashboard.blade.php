@@ -13,7 +13,7 @@
         </div>
 
         <div class="page-content">
-            <a href="{{ route('admin.development.webconsole') }}" class="development-dashboard-tool-title-link" target="_blank">
+            <a href="{{ route('admin.development.tools.webconsole') }}" class="development-dashboard-tool-title-link" target="_blank">
                 <div class="rad-info-box">
                     <p>
                         <span class="heading">{{ __('admin::app.settings.development.tools.webconsole') }}</span>

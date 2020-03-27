@@ -17,7 +17,6 @@
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
         "ext-tokenizer": "*",
-        "alkhachatryan/laravel-web-console": "^2.2",
         "astrotomic/laravel-translatable": "^11.0.0",
         "barryvdh/laravel-dompdf": "0.8.5",
         "doctrine/dbal": "2.9.2",
@@ -38,6 +37,7 @@
     },
 
     "require-dev": {
+        "alkhachatryan/laravel-web-console": "^2.2",
         "codeception/codeception": "4.1.1",
         "codeception/module-asserts": "^1.1",
         "codeception/module-filesystem": "^1.0",

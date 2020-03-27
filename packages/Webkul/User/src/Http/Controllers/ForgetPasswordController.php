@@ -5,12 +5,6 @@ namespace Webkul\User\Http\Controllers;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Support\Facades\Password;
 
-/**
- * Admin forget password controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ForgetPasswordController extends Controller
 {
     use SendsPasswordResetEmails;
@@ -35,7 +29,7 @@ class ForgetPasswordController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -49,25 +43,31 @@ class ForgetPasswordController extends Controller
      */
     public function store()
     {
-        $this->validate(request(), [
-            'email' => 'required|email'
-        ]);
+        try {
+            $this->validate(request(), [
+                'email' => 'required|email',
+            ]);
 
-        $response = $this->broker()->sendResetLink(
-            request(['email'])
-        );
-
-        if ($response == Password::RESET_LINK_SENT) {
-            session()->flash('success', trans($response));
-
-            return back();
-        }
-
-        return back()
-            ->withInput(request(['email']))
-            ->withErrors(
-                ['email' => trans($response)]
+            $response = $this->broker()->sendResetLink(
+                request(['email'])
             );
+
+            if ($response == Password::RESET_LINK_SENT) {
+                session()->flash('success', trans($response));
+
+                return back();
+            }
+
+            return back()
+                ->withInput(request(['email']))
+                ->withErrors([
+                    'email' => trans($response),
+                ]);
+        } catch(\Exception $e) {
+            session()->flash('error', trans($e->getMessage()));
+
+            return redirect()->back();
+        }
     }
 
     /**

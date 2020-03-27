@@ -13,11 +13,6 @@ Route::group(['middleware' => ['web', 'locale', 'theme', 'currency']], function 
     //unsubscribe
     Route::get('/unsubscribe/{token}', 'Webkul\Shop\Http\Controllers\SubscriptionController@unsubscribe')->name('shop.unsubscribe');
 
-    //Store front header nav-menu fetch
-    Route::get('/categories/{slug}', 'Webkul\Shop\Http\Controllers\CategoryController@index')->defaults('_config', [
-        'view' => 'shop::products.index'
-    ])->name('shop.categories.index');
-
     //Store front search
     Route::get('/search', 'Webkul\Shop\Http\Controllers\SearchController@index')->defaults('_config', [
         'view' => 'shop::search.search'
@@ -39,9 +34,9 @@ Route::group(['middleware' => ['web', 'locale', 'theme', 'currency']], function 
         'view' => 'shop::checkout.cart.index'
     ])->name('shop.checkout.cart.index');
 
-        Route::post('checkout/check/coupons', 'Webkul\Shop\Http\Controllers\OnepageController@applyCoupon')->name('shop.checkout.check.coupons');
+    Route::post('checkout/cart/coupon', 'Webkul\Shop\Http\Controllers\CartController@applyCoupon')->name('shop.checkout.cart.coupon.apply');
 
-        Route::post('checkout/remove/coupon', 'Webkul\Shop\Http\Controllers\OnepageController@removeCoupon')->name('shop.checkout.remove.coupon');
+    Route::delete('checkout/cart/coupon', 'Webkul\Shop\Http\Controllers\CartController@removeCoupon')->name('shop.checkout.coupon.remove.coupon');
 
     //Cart Items Add
     Route::post('checkout/cart/add/{id}', 'Webkul\Shop\Http\Controllers\CartController@add')->defaults('_config', [
@@ -88,11 +83,6 @@ Route::group(['middleware' => ['web', 'locale', 'theme', 'currency']], function 
 
     //Shop buynow button action
     Route::get('move/wishlist/{id}', 'Webkul\Shop\Http\Controllers\CartController@moveToWishlist')->name('shop.movetowishlist');
-
-    //Show Product Details Page(For individually Viewable Product)
-    Route::get('/products/{slug}', 'Webkul\Shop\Http\Controllers\ProductController@index')->defaults('_config', [
-        'view' => 'shop::products.view'
-    ])->name('shop.products.index');
 
     Route::get('/downloadable/download-sample/{type}/{id}', 'Webkul\Shop\Http\Controllers\ProductController@downloadSample')->name('shop.downloadable.download_sample');
 
@@ -307,5 +297,10 @@ Route::group(['middleware' => ['web', 'locale', 'theme', 'currency']], function 
 
     Route::get('page/{slug}', 'Webkul\CMS\Http\Controllers\Shop\PagePresenterController@presenter')->name('shop.cms.page');
 
-    Route::fallback('Webkul\Shop\Http\Controllers\HomeController@notFound');
+    Route::fallback(\Webkul\Shop\Http\Controllers\ProductsCategoriesProxyController::class . '@index')
+        ->defaults('_config', [
+            'product_view' => 'shop::products.view',
+            'category_view' => 'shop::products.index'
+        ])
+        ->name('shop.productOrCategory.index');
 });

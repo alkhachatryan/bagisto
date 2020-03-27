@@ -5,12 +5,6 @@ namespace Webkul\Attribute\Http\Controllers;
 use Webkul\Attribute\Repositories\AttributeFamilyRepository;
 use Webkul\Attribute\Repositories\AttributeRepository;
 
-/**
- * Catalog family controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class AttributeFamilyController extends Controller
 {
     /**
@@ -23,22 +17,22 @@ class AttributeFamilyController extends Controller
     /**
      * AttributeFamilyRepository object
      *
-     * @var Object
+     * @var \Webkul\Attribute\Repositories\AttributeFamilyRepository
      */
     protected $attributeFamilyRepository;
 
     /**
      * AttributeRepository object
      *
-     * @var Object
+     * @var \Webkul\Attribute\Repositories\AttributeRepository
      */
     protected $attributeRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Attribute\Repositories\AttributeFamilyRepository $attributeFamilyRepository
-     * @param  \Webkul\Attribute\Repositories\AttributeRepository       $attributeRepository
+     * @param  \Webkul\Attribute\Repositories\AttributeFamilyRepository  $attributeFamilyRepository
+     * @param  \Webkul\Attribute\Repositories\AttributeRepository  $attributeRepository
      * @return void
      */
     public function __construct(
@@ -86,7 +80,7 @@ class AttributeFamilyController extends Controller
     {
         $this->validate(request(), [
             'code' => ['required', 'unique:attribute_families,code', new \Webkul\Core\Contracts\Validations\Code],
-            'name' => 'required'
+            'name' => 'required',
         ]);
 
         $attributeFamily = $this->attributeFamilyRepository->create(request()->all());
@@ -121,7 +115,7 @@ class AttributeFamilyController extends Controller
     {
         $this->validate(request(), [
             'code' => ['required', 'unique:attribute_families,code,' . $id, new \Webkul\Core\Contracts\Validations\Code],
-            'name' => 'required'
+            'name' => 'required',
         ]);
 
         $attributeFamily = $this->attributeFamilyRepository->update(request()->all(), $id);
@@ -144,7 +138,7 @@ class AttributeFamilyController extends Controller
         if ($this->attributeFamilyRepository->count() == 1) {
             session()->flash('error', trans('admin::app.response.last-delete-error', ['name' => 'Family']));
 
-        } else if ($attributeFamily->products()->count()) {
+        } elseif ($attributeFamily->products()->count()) {
             session()->flash('error', trans('admin::app.response.attribute-product-error', ['name' => 'Attribute family']));
         } else {
             try {
@@ -154,7 +148,8 @@ class AttributeFamilyController extends Controller
 
                 return response()->json(['message' => true], 200);
             } catch (\Exception $e) {
-                session()->flash('error', trans( 'admin::app.response.delete-failed', ['name' => 'Family']));
+                report($e);
+                session()->flash('error', trans('admin::app.response.delete-failed', ['name' => 'Family']));
             }
         }
 
@@ -164,7 +159,7 @@ class AttributeFamilyController extends Controller
     /**
      * Remove the specified resources from database
      *
-     * @return response \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response
      */
     public function massDestroy()
     {
@@ -177,16 +172,18 @@ class AttributeFamilyController extends Controller
                 try {
                     $this->attributeFamilyRepository->delete($value);
                 } catch (\Exception $e) {
+                    report($e);
                     $suppressFlash = true;
 
                     continue;
                 }
             }
 
-            if (! $suppressFlash)
+            if (! $suppressFlash) {
                 session()->flash('success', ('admin::app.datagrid.mass-ops.delete-success'));
-            else
+            } else {
                 session()->flash('info', trans('admin::app.datagrid.mass-ops.partial-action', ['resource' => 'Attribute Family']));
+            }
 
             return redirect()->back();
         } else {

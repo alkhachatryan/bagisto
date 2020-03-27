@@ -6,50 +6,37 @@ use Illuminate\Support\Facades\Mail;
 use Webkul\Shop\Mail\SubscriptionEmail;
 use Webkul\Core\Repositories\SubscribersListRepository;
 
-/**
- * Subscription controller
- *
- * @author    Prashant Singh <prashant.singh852@webkul.com> @prashant-webkul
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class SubscriptionController extends Controller
 {
     /**
-     * Contains route related configuration
-     *
-     * @var array
-     */
-    protected $_config;
-
-    /**
      * SubscribersListRepository
      *
-     * @var Object
+     * @var \Webkul\Core\Repositories\SubscribersListRepository
      */
     protected $subscriptionRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Core\Repositories\SubscribersListRepository $subscriptionRepository
+     * @param  \Webkul\Core\Repositories\SubscribersListRepository  $subscriptionRepository
      * @return void
      */
     public function __construct(SubscribersListRepository $subscriptionRepository)
     {
         $this->subscriptionRepository = $subscriptionRepository;
 
-        $this->_config = request('_config');
+        parent::__construct();
     }
 
     /**
      * Subscribes email to the email subscription list
      *
-     * @return Redirect
+     * @return \Illuminate\Http\Response
      */
     public function subscribe()
     {
         $this->validate(request(), [
-            'subscriber_email' => 'email|required'
+            'subscriber_email' => 'email|required',
         ]);
 
         $email = request()->input('subscriber_email');
@@ -75,6 +62,7 @@ class SubscriptionController extends Controller
 
                 session()->flash('success', trans('shop::app.subscription.subscribed'));
             } catch (\Exception $e) {
+                report($e);
                 session()->flash('error', trans('shop::app.subscription.not-subscribed'));
 
                 $mailSent = false;
@@ -84,10 +72,10 @@ class SubscriptionController extends Controller
 
             if ($mailSent) {
                 $result = $this->subscriptionRepository->create([
-                    'email' => $email,
-                    'channel_id' => core()->getCurrentChannel()->id,
+                    'email'         => $email,
+                    'channel_id'    => core()->getCurrentChannel()->id,
                     'is_subscribed' => 1,
-                    'token' => $token
+                    'token'         => $token,
                 ]);
 
                 if (! $result) {
@@ -106,7 +94,8 @@ class SubscriptionController extends Controller
     /**
      * To unsubscribe from a the subcription list
      *
-     * @var string $token
+     * @param  string  $token
+     * @return \Illuminate\Http\Response
      */
     public function unsubscribe($token)
     {

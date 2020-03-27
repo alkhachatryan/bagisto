@@ -98,6 +98,7 @@
 
                     <div v-if="option.type == 'multiselect'">
                         <select class="control" :name="'bundle_options[' + option.id + '][]'" v-model="selected_product" v-validate="option.is_required ? 'required' : ''" :data-vv-as="'&quot;' + option.label + '&quot;'" multiple>
+                            <option value="0" v-if="! option.is_required">{{ __('shop::app.products.none') }}</option>
                             <option v-for="(product, index2) in option.products" :value="product.id">
                                 @{{ product.name + ' + ' + product.price.final_price.formated_price }}
                             </option>
@@ -181,16 +182,22 @@
                 data: function() {
                     return {
                         selected_product: (this.option.type == 'checkbox' || this.option.type == 'multiselect')  ? [] : null,
-                        
+
                         qty_validations: ''
                     }
                 },
 
                 computed: {
                     product_qty: function() {
-                        return this.option.products[this.selected_product]
-                            ? this.option.products[this.selected_product].qty
-                            : 0;
+                        var self = this;
+                        self.qty = 0;
+
+                        self.option.products.forEach(function(product, key){
+                            if (self.selected_product == product.id)
+                                self.qty =  self.option.products[key].qty;
+                        });
+
+                        return self.qty;
                     }
                 },
 

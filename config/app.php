@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'Asia/Kolkata',
+    'timezone' => env('APP_TIMEZONE','Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => env('APP_LOCALE', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -95,14 +95,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default Country
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default country by country code.
+    | Ensure it is uppercase and reflects the 'code' column of the
+    | countries table.
+    |
+    | for example: DE EN FR
+    | (use capital letters!)
+    */
+
+    'default_country' => null,
+
+    /*
+    |--------------------------------------------------------------------------
     | Base Currency Code
     |--------------------------------------------------------------------------
     |
     | Here you may specify the base currency code for your application.
     |
     */
-
-    'currency' => 'USD',
+    
+    'currency' => env('APP_CURRENCY', 'USD'),
 
     /*
     |--------------------------------------------------------------------------
@@ -138,7 +153,7 @@ return [
     /*
         Application Version
     */
-    'version' => env('APP_VERSION', '0.1.6'),
+    'version' => env('APP_VERSION', '1.1.0'),
 
     /**
      * Blacklisting attributes while debugging
@@ -219,6 +234,8 @@ return [
         //Laravel Maatwebsite
         Maatwebsite\Excel\ExcelServiceProvider::class,
 
+        Barryvdh\Debugbar\ServiceProvider::class,
+
         //Repository
         Prettus\Repository\Providers\RepositoryServiceProvider::class,
         Konekt\Concord\ConcordServiceProvider::class,
@@ -245,8 +262,12 @@ return [
         Webkul\Sales\Providers\SalesServiceProvider::class,
         Webkul\Tax\Providers\TaxServiceProvider::class,
         Webkul\API\Providers\APIServiceProvider::class,
-        Webkul\Discount\Providers\DiscountServiceProvider::class,
-        Webkul\CMS\Providers\CMSServiceProvider::class
+        Webkul\CatalogRule\Providers\CatalogRuleServiceProvider::class,
+        Webkul\CartRule\Providers\CartRuleServiceProvider::class,
+        Webkul\Rule\Providers\RuleServiceProvider::class,
+        Webkul\CMS\Providers\CMSServiceProvider::class,
+        Webkul\Velocity\Providers\VelocityServiceProvider::class,
+        Webkul\BookingProduct\Providers\BookingProductServiceProvider::class,
     ],
 
     /*

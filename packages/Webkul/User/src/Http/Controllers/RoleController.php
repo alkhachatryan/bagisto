@@ -5,12 +5,6 @@ namespace Webkul\User\Http\Controllers;
 use Illuminate\Support\Facades\Event;
 use Webkul\User\Repositories\RoleRepository;
 
-/**
- * Admin user role controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class RoleController extends Controller
 {
     /**
@@ -23,14 +17,14 @@ class RoleController extends Controller
     /**
      * RoleRepository object
      *
-     * @var array
+     * @var \Webkul\User\Repositories\RoleRepository
      */
     protected $roleRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\User\Repositories\RoleRepository $roleRepository
+     * @param  \Webkul\User\Repositories\RoleRepository  $roleRepository
      * @return void
      */
     public function __construct(RoleRepository $roleRepository)
@@ -45,7 +39,7 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -55,7 +49,7 @@ class RoleController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -70,15 +64,15 @@ class RoleController extends Controller
     public function store()
     {
         $this->validate(request(), [
-            'name' => 'required',
+            'name'            => 'required',
             'permission_type' => 'required',
         ]);
 
-        Event::fire('user.role.create.before');
+        Event::dispatch('user.role.create.before');
 
         $role = $this->roleRepository->create(request()->all());
 
-        Event::fire('user.role.create.after', $role);
+        Event::dispatch('user.role.create.after', $role);
 
         session()->flash('success', trans('admin::app.response.create-success', ['name' => 'Role']));
 
@@ -89,7 +83,7 @@ class RoleController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
@@ -107,15 +101,15 @@ class RoleController extends Controller
     public function update($id)
     {
         $this->validate(request(), [
-            'name' => 'required',
+            'name'            => 'required',
             'permission_type' => 'required',
         ]);
 
-        Event::fire('user.role.update.before', $id);
+        Event::dispatch('user.role.update.before', $id);
 
         $role = $this->roleRepository->update(request()->all(), $id);
 
-        Event::fire('user.role.update.after', $role);
+        Event::dispatch('user.role.update.after', $role);
 
         session()->flash('success', trans('admin::app.response.update-success', ['name' => 'Role']));
 
@@ -134,15 +128,15 @@ class RoleController extends Controller
 
         if ($role->admins->count() >= 1) {
             session()->flash('error', trans('admin::app.response.being-used', ['name' => 'Role', 'source' => 'Admin User']));
-        } else if($this->roleRepository->count() == 1) {
+        } elseif($this->roleRepository->count() == 1) {
             session()->flash('error', trans('admin::app.response.last-delete-error', ['name' => 'Role']));
         } else {
             try {
-                Event::fire('user.role.delete.before', $id);
+                Event::dispatch('user.role.delete.before', $id);
 
                 $this->roleRepository->delete($id);
 
-                Event::fire('user.role.delete.after', $id);
+                Event::dispatch('user.role.delete.after', $id);
 
                 session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Role']));
 

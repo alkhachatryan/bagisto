@@ -18,7 +18,7 @@
                     <ul class="list-group">
                         @foreach ($categories as $key => $category)
                             <li>
-                                <a href="{{ route('shop.categories.index', $category->slug) }}">{{ $category->name }}</a>
+                                <a href="{{ route('shop.productOrCategory.index', $category->slug) }}">{{ $category->name }}</a>
                             </li>
                         @endforeach
                     </ul>
@@ -42,13 +42,10 @@
                 @endif
 
                 <?php
-                    $query = parse_url(\Illuminate\Support\Facades\Request::path(), PHP_URL_QUERY);
-                    $searchTerm = explode("&", $query);
+                    $term = request()->input('term');
 
-                    foreach($searchTerm as $term){
-                        if (strpos($term, 'term') !== false) {
-                            $serachQuery = $term;
-                        }
+                    if (! is_null($term)) {
+                        $serachQuery = 'term='.request()->input('term');
                     }
                 ?>
 

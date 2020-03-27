@@ -44,8 +44,17 @@
         },
 
         created () {
-            let index = this.savedValues.indexOf(this.items[this.valueField])
-            if(index !== -1) {
+            if (! this.savedValues)
+                return;
+
+            var self = this;
+
+            var found = this.savedValues.filter(function(value) {
+                if (value == self.items[self.valueField])
+                    return true;
+            });
+
+            if(found.length) {
                 this.value.push(this.items);
             }
         },

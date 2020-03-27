@@ -2,30 +2,27 @@
 
 namespace Webkul\Core\Repositories;
 
-use Illuminate\Container\Container as App;
-use Webkul\Core\Eloquent\Repository;
-use Webkul\Core\Repositories\ChannelRepository;
 use Storage;
+use Webkul\Core\Eloquent\Repository;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Container\Container as App;
+use Webkul\Core\Repositories\ChannelRepository;
+use Illuminate\Support\Arr;
 
-/**
- * Slider Repository
- *
- * @author  Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class SliderRepository extends Repository
 {
     /**
      * ChannelRepository object
      *
-     * @var Object
+     * @var \Webkul\Core\Repositories\ChannelRepository
      */
     protected $channelRepository;
 
     /**
      * Create a new repository instance.
      *
-     * @param  \Webkul\Core\Repositories\ChannelRepository $channelRepository
+     * @param  \Webkul\Core\Repositories\ChannelRepository  $channelRepository
+     * @param  \Illuminate\Container\Container  $channelRepository
      * @return void
      */
     public function __construct(
@@ -49,24 +46,26 @@ class SliderRepository extends Repository
     }
 
     /**
-     * @param array $data
-     * @return mixed
+     * @param  array  $data
+     * @return \Webkul\Core\Contracts\Slider
      */
     public function save(array $data)
     {
+        Event::dispatch('core.settings.slider.create.before', $data);
+
         $channelName = $this->channelRepository->find($data['channel_id'])->name;
 
         $dir = 'slider_images/' . $channelName;
 
-        $uploaded = false;
-        $image = false;
+        $uploaded = $image = false;
 
         if (isset($data['image'])) {
-            $image = $first = array_first($data['image'], function ($value, $key) {
-                if ($value)
+            $image = $first = Arr::first($data['image'], function ($value, $key) {
+                if ($value) {
                     return $value;
-                else
+                } else {
                     return false;
+                }
             });
         }
 
@@ -82,15 +81,21 @@ class SliderRepository extends Repository
             unset($data['image']);
         }
 
-        return $this->create($data);
+        $slider = $this->create($data);
+
+        Event::dispatch('core.settings.slider.create.after', $slider);
+
+        return true;
     }
 
     /**
-     * @param array $data
-     * @return mixed
+     * @param  array  $data
+     * @return bool
      */
     public function updateItem(array $data, $id)
     {
+        Event::dispatch('core.settings.slider.update.before', $id);
+
         $channelName = $this->channelRepository->find($data['channel_id'])->name;
 
         $dir = 'slider_images/' . $channelName;
@@ -98,7 +103,7 @@ class SliderRepository extends Repository
         $uploaded = $image = false;
 
         if (isset($data['image'])) {
-            $image = $first = array_first($data['image'], function ($value, $key) {
+            $image = $first = Arr::first($data['image'], function ($value, $key) {
                 return $value ? $value : false;
             });
         }
@@ -119,7 +124,9 @@ class SliderRepository extends Repository
             unset($data['image']);
         }
 
-        $this->update($data, $id);
+        $slider = $this->update($data, $id);
+
+        Event::dispatch('core.settings.slider.update.after', $slider);
 
         return true;
     }
@@ -127,7 +134,8 @@ class SliderRepository extends Repository
     /**
      * Delete a slider item and delete the image from the disk or where ever it is
      *
-     * @return Boolean
+     * @param  int  $id
+     * @return bool
      */
     public function destroy($id)
     {

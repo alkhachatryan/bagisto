@@ -34,7 +34,7 @@
                         </li>
 
                         <li class="mb-15">
-                            @{{ addresses.country }}.
+                            @{{ addresses.country }}  @{{ addresses.postcode }}
                         </li>
 
                         <li>
@@ -92,6 +92,18 @@
         @if (! auth()->guard('customer')->check())
             @include('shop::checkout.onepage.customer-checkout')
         @endif
+
+        <div class="control-group" :class="[errors.has('address-form.billing[company_name]') ? 'has-error' : '']">
+            <label for="billing[company_name]">
+                {{ __('shop::app.checkout.onepage.company-name') }}
+            </label>
+
+            <input type="text" class="control" id="billing[company_name]" name="billing[company_name]" v-model="address.billing.company_name" data-vv-as="&quot;{{ __('shop::app.checkout.onepage.company-name') }}&quot;"/>
+
+            <span class="control-error" v-if="errors.has('address-form.billing[company_name]')">
+                @{{ errors.first('address-form.billing[company_name]') }}
+            </span>
+        </div>
 
         <div class="control-group" :class="[errors.has('address-form.billing[first_name]') ? 'has-error' : '']">
             <label for="billing[first_name]" class="required">
@@ -274,7 +286,7 @@
                             </li>
 
                             <li class="mb-15">
-                                @{{ addresses.country }}.
+                                @{{ addresses.country }} @{{ addresses.postcode }}
                             </li>
 
                             <li>

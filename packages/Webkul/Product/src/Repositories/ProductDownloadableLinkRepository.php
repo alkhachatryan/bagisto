@@ -4,19 +4,14 @@ namespace Webkul\Product\Repositories;
 
 use Illuminate\Support\Facades\Storage;
 use Webkul\Core\Eloquent\Repository;
+use Illuminate\Support\Str;
 
-/**
- * Product Downloadable Link Reposotory
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ProductDownloadableLinkRepository extends Repository
 {
     /**
      * Specify Model class name
      *
-     * @return mixed
+     * @return string
      */
     function model()
     {
@@ -24,18 +19,18 @@ class ProductDownloadableLinkRepository extends Repository
     }
 
     /**
-     * @param  array   $data
+     * @param  array  $data
      * @param  integer $productId
-     * @return mixed
+     * @return array
      */
     public function upload($data, $productId)
     {
         foreach ($data as $type => $file) {
             if (request()->hasFile($type)) {
                 return [
-                    $type => $path = request()->file($type)->store('product/' . $productId),
+                    $type           => $path = request()->file($type)->store('product_downloadable_links/' . $productId),
                     $type . '_name' => $file->getClientOriginalName(),
-                    $type . '_url' => Storage::url($path)
+                    $type . '_url'  => Storage::url($path),
                 ];
             }
         }
@@ -44,8 +39,8 @@ class ProductDownloadableLinkRepository extends Repository
     }
 
     /**
-     * @param array $data
-     * @param mixed $product
+     * @param  array  $data
+     * @param  \Webkul\Product\Contracts\Product  $product
      * @return void
      */
     public function saveLinks(array $data, $product)
@@ -54,10 +49,10 @@ class ProductDownloadableLinkRepository extends Repository
 
         if (isset($data['downloadable_links'])) {
             foreach ($data['downloadable_links'] as $linkId => $data) {
-                if (str_contains($linkId, 'link_')) {
+                if (Str::contains($linkId, 'link_')) {
                     $this->create(array_merge([
-                            'product_id' => $product->id,
-                        ], $data));
+                        'product_id' => $product->id,
+                    ], $data));
                 } else {
                     if (is_numeric($index = $previousLinkIds->search($linkId))) {
                         $previousLinkIds->forget($index);

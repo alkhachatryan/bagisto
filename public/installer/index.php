@@ -1,5 +1,4 @@
 <html>
-
     <?php
         $actual_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
@@ -10,24 +9,24 @@
     ?>
 
     <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,500">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
         <title>Bagisto Installer</title>
+
         <link rel="icon" sizes="16x16" href="Images/favicon.ico">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,500">
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" type="text/css" href= "<?php echo $cssUrl; ?> ">
+
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
-        <link rel="stylesheet" type="text/css" href= "<?php echo $cssUrl; ?> ">
     </head>
 
     <body>
-
-        <div class="container requirement">
-            <div class="initial-display" style="padding-top: 100px;">
+        <div class="container">
+            <div class="initial-display">
                 <img class="logo" src= "<?php echo $logo; ?>" >
-            </div>
-
-            <div class="footer">
-                <img class="left-patern"  src= "<?php echo $leftIcon; ?>" >
-                <img class="right-patern"  src= "<?php echo $rightIcon; ?>" >
             </div>
         </div>
 
@@ -46,7 +45,7 @@
 
                 // reading env content
                 $data = file($envFile);
-                $databaseArray = ['DB_HOST', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD', 'DB_CONNECTION','DB_PORT'];
+                $databaseArray = ['DB_HOST', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD', 'DB_CONNECTION','DB_PORT', 'DB_PREFIX'];
                 $key = $value = [];
 
                 if ($data) {
@@ -89,7 +88,8 @@
 
                     if (!$conn->connect_error) {
                         // retrieving admin entry
-                        $sql = "SELECT id, name FROM admins";
+                        $prefix = $databaseData['DB_PREFIX'].'admins';
+                        $sql = "SELECT id, name FROM $prefix";
                         $result = $conn->query($sql);
 
                         if ($result) {
@@ -136,5 +136,9 @@
             }
         ?>
 
+        <div style="margin-bottom: 5px; margin-top: 30px;">
+            Powered by <a href="https://bagisto.com/" target="_blank">Bagisto</a>, a community project by
+            <a href="https://webkul.com/" target="_blank">Webkul</a>
+        </div>
     </body>
 </html>

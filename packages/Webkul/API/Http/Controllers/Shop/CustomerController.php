@@ -4,13 +4,8 @@ namespace Webkul\API\Http\Controllers\Shop;
 
 use Illuminate\Support\Facades\Event;
 use Webkul\Customer\Repositories\CustomerRepository;
+use Webkul\Customer\Repositories\CustomerGroupRepository;
 
-/**
- * Customer controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class CustomerController extends Controller
 {
     /**
@@ -23,51 +18,67 @@ class CustomerController extends Controller
     /**
      * Repository object
      *
-     * @var array
+     * @var \Webkul\Customer\Repositories\CustomerRepository
      */
     protected $customerRepository;
 
     /**
-     * @param CustomerRepository object $customer
+     * Repository object
+     *
+     * @var \Webkul\Customer\Repositories\CustomerGroupRepository
      */
-    public function __construct(CustomerRepository $customerRepository)
-    {
+    protected $customerGroupRepository;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @param  \Webkul\Customer\Repositories\CustomerRepository  $customerRepository
+     * @param  \Webkul\Customer\Repositories\CustomerGroupRepository  $customerGroupRepository
+     * @return void
+     */
+    public function __construct(
+        CustomerRepository $customerRepository,
+        CustomerGroupRepository $customerGroupRepository
+    )   {
         $this->_config = request('_config');
 
         $this->customerRepository = $customerRepository;
+
+        $this->customerGroupRepository = $customerGroupRepository;
     }
 
     /**
      * Method to store user's sign up form data to DB.
      *
-     * @return Mixed
+     * @return \Illuminate\Http\Response
      */
     public function create()
     {
         request()->validate([
             'first_name' => 'required',
-            'last_name' => 'required',
-            'email' => 'email|required|unique:customers,email',
-            'password' => 'confirmed|min:6|required'
+            'last_name'  => 'required',
+            'email'      => 'email|required|unique:customers,email',
+            'password'   => 'confirmed|min:6|required',
         ]);
 
         $data = request()->input();
 
         $data = array_merge($data, [
-                'password' => bcrypt($data['password']),
-                'channel_id' => core()->getCurrentChannel()->id,
+                'password'    => bcrypt($data['password']),
+                'channel_id'  => core()->getCurrentChannel()->id,
                 'is_verified' => 1,
-                'customer_group_id' => 1
             ]);
 
-        Event::fire('customer.registration.before');
+        $data['customer_group_id'] = $this->customerGroupRepository->findOneWhere(['code' => 'general'])->id;
+
+        Event::dispatch('customer.registration.before');
 
         $customer = $this->customerRepository->create($data);
 
-        Event::fire('customer.registration.after', $customer);
+        Event::dispatch('customer.registration.after', $customer);
 
         return response()->json([
-                'message' => 'Your account has been created successfully.'
-            ]);
+            'message' => 'Your account has been created successfully.',
+        ]);
     }
 }

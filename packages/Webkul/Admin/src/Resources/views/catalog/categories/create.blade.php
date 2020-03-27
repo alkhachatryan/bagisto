@@ -39,7 +39,7 @@
 
                             <div class="control-group" :class="[errors.has('name') ? 'has-error' : '']">
                                 <label for="name" class="required">{{ __('admin::app.catalog.categories.name') }}</label>
-                                <input type="text" v-validate="'required'" class="control" id="name" name="name" value="{{ old('name') }}" data-vv-as="&quot;{{ __('admin::app.catalog.categories.name') }}&quot;"/>
+                                <input type="text" v-validate="'required'" class="control" id="name" name="name" value="{{ old('name') }}" data-vv-as="&quot;{{ __('admin::app.catalog.categories.name') }}&quot;" v-slugify-target="'slug'"/>
                                 <span class="control-error" v-if="errors.has('name')">@{{ errors.first('name') }}</span>
                             </div>
 
@@ -96,7 +96,7 @@
                             <description></description>
 
                             <div class="control-group {!! $errors->has('image.*') ? 'has-error' : '' !!}">
-                                <label>{{ __('admin::app.catalog.categories.image') }}
+                                <label>{{ __('admin::app.catalog.categories.image') }}</label>
 
                                 <image-wrapper :button-label="'{{ __('admin::app.catalog.products.add-image-btn-title') }}'" input-name="image" :multiple="false"></image-wrapper>
 
@@ -139,7 +139,7 @@
                     <accordian :title="'{{ __('admin::app.catalog.categories.filterable-attributes') }}'" :active="true">
                         <div slot="body">
 
-                            <?php $selectedaAtributes = old('attributes') ?? [] ?>
+                            <?php $selectedaAtributes = old('attributes') ? old('attributes') : ['11']  ?>
 
                             <div class="control-group" :class="[errors.has('attributes[]') ? 'has-error' : '']">
                                 <label for="attributes" class="required">{{ __('admin::app.catalog.categories.attributes') }}</label>

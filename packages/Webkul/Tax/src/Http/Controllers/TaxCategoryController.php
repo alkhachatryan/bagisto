@@ -6,12 +6,6 @@ use Illuminate\Support\Facades\Event;
 use Webkul\Tax\Repositories\TaxCategoryRepository;
 use Webkul\Tax\Repositories\TaxRateRepository;
 
-/**
- * Tax controller
- *
- * @author    Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class TaxCategoryController extends Controller
 {
     /**
@@ -24,22 +18,22 @@ class TaxCategoryController extends Controller
     /**
      * TaxCategoryRepository
      *
-     * @var Object
+     * @var \Webkul\Tax\Repositories\TaxCategoryRepository
      */
     protected $taxCategoryRepository;
 
     /**
      * TaxRateRepository
      *
-     * @var Object
+     * @var \Webkul\Tax\Repositories\TaxRateRepository
      */
     protected $taxRateRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Tax\Repositories\TaxCategoryRepository $taxCategoryRepository
-     * @param  \Webkul\Tax\Repositories\TaxRateRepository     $taxRateRepository
+     * @param  \Webkul\Tax\Repositories\TaxCategoryRepository  $taxCategoryRepository
+     * @param  \Webkul\Tax\Repositories\TaxRateRepository  $taxRateRepository
      * @return void
      */
     public function __construct(
@@ -57,7 +51,7 @@ class TaxCategoryController extends Controller
     /**
      * Function to show the tax category form
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function show()
     {
@@ -65,31 +59,30 @@ class TaxCategoryController extends Controller
     }
 
     /**
-     * Function to create
-     * the tax category.
+     * Function to create the tax category.
      *
-     * @return view
+     * @return \Illuminate\View\View
      */
     public function create()
     {
         $data = request()->input();
 
         $this->validate(request(), [
-            'channel_id' => 'required|numeric',
-            'code' => 'required|string|unique:tax_categories,code',
-            'name' => 'required|string',
+            'channel_id'  => 'required|numeric',
+            'code'        => 'required|string|unique:tax_categories,code',
+            'name'        => 'required|string',
             'description' => 'required|string',
-            'taxrates' => 'array|required'
+            'taxrates'    => 'array|required',
         ]);
 
-        Event::fire('tax.tax_category.create.before');
+        Event::dispatch('tax.tax_category.create.before');
 
         $taxCategory = $this->taxCategoryRepository->create($data);
 
         //attach the categories in the tax map table
         $this->taxCategoryRepository->attachOrDetach($taxCategory, $data['taxrates']);
 
-        Event::fire('tax.tax_category.create.after', $taxCategory);
+        Event::dispatch('tax.tax_category.create.after', $taxCategory);
 
         session()->flash('success', trans('admin::app.settings.tax-categories.create-success'));
 
@@ -99,8 +92,8 @@ class TaxCategoryController extends Controller
     /**
      * To show the edit form form the tax category
      *
-     * @param int $id
-     * @return \Illuminate\View\View 
+     * @param  int  $id
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
@@ -112,26 +105,26 @@ class TaxCategoryController extends Controller
     /**
      * To update the tax category
      *
-     * @param int $id
-     * @return Response
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
      */
     public function update($id)
     {
         $this->validate(request(), [
-            'channel_id' => 'required|numeric',
-            'code' => 'required|string|unique:tax_categories,code,' . $id,
-            'name' => 'required|string',
+            'channel_id'  => 'required|numeric',
+            'code'        => 'required|string|unique:tax_categories,code,' . $id,
+            'name'        => 'required|string',
             'description' => 'required|string',
-            'taxrates' => 'array|required'
+            'taxrates'    => 'array|required',
         ]);
 
         $data = request()->input();
 
-        Event::fire('tax.tax_category.update.before', $id);
+        Event::dispatch('tax.tax_category.update.before', $id);
 
         $taxCategory = $this->taxCategoryRepository->update($data, $id);
 
-        Event::fire('tax.tax_category.update.after', $taxCategory);
+        Event::dispatch('tax.tax_category.update.after', $taxCategory);
 
         if (! $taxCategory) {
             session()->flash('error', trans('admin::app.settings.tax-categories.update-error'));
@@ -160,11 +153,11 @@ class TaxCategoryController extends Controller
         $taxCategory = $this->taxCategoryRepository->findOrFail($id);
 
         try {
-            Event::fire('tax.tax_category.delete.before', $id);
+            Event::dispatch('tax.tax_category.delete.before', $id);
 
             $this->taxCategoryRepository->delete($id);
 
-            Event::fire('tax.tax_category.delete.after', $id);
+            Event::dispatch('tax.tax_category.delete.after', $id);
 
             session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Tax Category']));
 

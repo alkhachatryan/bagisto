@@ -48,7 +48,7 @@
                         <div slot="body">
                             <div class="control-group" :class="[errors.has('password') ? 'has-error' : '']">
                                 <label for="password">{{ __('admin::app.users.users.password') }}</label>
-                                <input type="password" v-validate="'min:6|max:18'" class="control" id="password" name="password" data-vv-as="&quot;{{ __('admin::app.users.users.password') }}&quot;"/>
+                                <input type="password" v-validate="'min:6|max:18'" class="control" id="password" name="password" ref="password" data-vv-as="&quot;{{ __('admin::app.users.users.password') }}&quot;"/>
                                 <span class="control-error" v-if="errors.has('password')">@{{ errors.first('password') }}</span>
                             </div>
 
@@ -74,19 +74,11 @@
 
                             <div class="control-group">
                                 <label for="status">{{ __('admin::app.users.users.status') }}</label>
-                                <span class="checkbox">
-                                    <input type="checkbox" id="status" name="status"
-                                    {{-- @if ($user->status == 0)
-                                        value="false"
-                                    @else
-                                        value="true"
-                                    @endif --}}
-
-                                    {{ $user->status ? 'checked' : '' }}>
-
-                                    <label class="checkbox-view" for="status"></label>
-                                    {{ __('admin::app.users.users.account-is-active') }}
-                                </span>
+                                
+                                <label class="switch">
+                                    <input type="checkbox" id="status" name="status" value="{{ $user->status }}" {{ $user->status ? 'checked' : '' }}>
+                                    <span class="slider round"></span>
+                                </label>
                             </div>
                         </div>
                     </accordian>

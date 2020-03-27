@@ -5,73 +5,61 @@ namespace Webkul\Shop\Http\Controllers;
 use Webkul\Product\Repositories\ProductRepository;
 use Webkul\Product\Repositories\ProductReviewRepository;
 
-/**
- * Review controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ReviewController extends Controller
 {
     /**
-     * Contains route related configuration
-     *
-     * @var array
-     */
-    protected $_config;
-
-    /**
      * ProductRepository object
      *
-     * @var Object
+     * @var \Webkul\Product\Repositories\ProductRepository
      */
     protected $productRepository;
 
     /**
      * ProductReviewRepository object
      *
-     * @var Object
+     * @var \Webkul\Product\Repositories\ProductReviewRepository
      */
     protected $productReviewRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Product\Repositories\ProductRepository        $productRepository
+     * @param  \Webkul\Product\Repositories\ProductRepository  $productRepository
      * @param  \Webkul\Product\Repositories\ProductReviewRepository  $productReviewRepository
      * @return void
      */
     public function __construct(
         ProductRepository $productRepository,
         ProductReviewRepository $productReviewRepository
-    )
-    {
+    ) {
         $this->productRepository = $productRepository;
 
         $this->productReviewRepository = $productReviewRepository;
 
-        $this->_config = request('_config');
+        parent::__construct();
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @param  string $slug
-     * @return \Illuminate\View\View 
+     * @param  string  $slug
+     * @return \Illuminate\View\View|\Exception
      */
     public function create($slug)
     {
-        $product = $this->productRepository->findBySlugOrFail($slug);
+        if (auth()->guard('customer')->check() || core()->getConfigData('catalog.products.review.guest_review')) {
+            $product = $this->productRepository->findBySlugOrFail($slug);
 
-        $guest_review = core()->getConfigData('catalog.products.review.guest_review');
+            return view($this->_config['view'], compact('product'));
+        }
 
-        return view($this->_config['view'], compact('product', 'guest_review'));
+        abort(404);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param integer $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function store($id)
@@ -86,7 +74,7 @@ class ReviewController extends Controller
 
         if (auth()->guard('customer')->user()) {
             $data['customer_id'] = auth()->guard('customer')->user()->id;
-            $data['name'] = auth()->guard('customer')->user()->first_name .' ' . auth()->guard('customer')->user()->last_name;
+            $data['name'] = auth()->guard('customer')->user()->first_name . ' ' . auth()->guard('customer')->user()->last_name;
         }
 
         $data['status'] = 'pending';
@@ -102,31 +90,32 @@ class ReviewController extends Controller
     /**
      * Display reviews of particular product.
      *
-     * @param  string $slug
-     * @return \Illuminate\View\View 
+     * @param  string  $slug
+     * @return \Illuminate\View\View
     */
     public function show($slug)
     {
         $product = $this->productRepository->findBySlugOrFail($slug);
 
-        return view($this->_config['view'],compact('product'));
+        return view($this->_config['view'], compact('product'));
     }
 
     /**
      * Customer delete a reviews from their account
      *
-     * @param integer $id
-     * @return response
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
         $review = $this->productReviewRepository->findOneWhere([
-            'id' => $id,
-            'customer_id' => auth()->guard('customer')->user()->id
+            'id'          => $id,
+            'customer_id' => auth()->guard('customer')->user()->id,
         ]);
 
-        if (! $review)
+        if (! $review) {
             abort(404);
+        }
 
         $this->productReviewRepository->delete($id);
 
@@ -138,7 +127,7 @@ class ReviewController extends Controller
     /**
      * Customer delete all reviews from their account
      *
-     * @return Mixed Response & Boolean
+     * @return \Illuminate\Http\Response
     */
     public function deleteAll()
     {

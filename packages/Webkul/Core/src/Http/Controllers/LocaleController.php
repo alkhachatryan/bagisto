@@ -5,12 +5,6 @@ namespace Webkul\Core\Http\Controllers;
 use Illuminate\Support\Facades\Event;
 use Webkul\Core\Repositories\LocaleRepository;
 
-/**
- * Locale controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class LocaleController extends Controller
 {
     /**
@@ -23,14 +17,14 @@ class LocaleController extends Controller
     /**
      * LocaleRepository object
      *
-     * @var array
+     * @var \Webkul\Core\Repositories\LocaleRepository
      */
     protected $localeRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Core\Repositories\LocaleRepository $localeRepository
+     * @param  \Webkul\Core\Repositories\LocaleRepository  $localeRepository
      * @return void
      */
     public function __construct(LocaleRepository $localeRepository)
@@ -68,16 +62,16 @@ class LocaleController extends Controller
     public function store()
     {
         $this->validate(request(), [
-            'code' => ['required', 'unique:locales,code', new \Webkul\Core\Contracts\Validations\Code],
-            'name' => 'required',
-            'direction' => 'in:ltr,rtl'
+            'code'      => ['required', 'unique:locales,code', new \Webkul\Core\Contracts\Validations\Code],
+            'name'      => 'required',
+            'direction' => 'in:ltr,rtl',
         ]);
 
-        Event::fire('core.locale.create.before');
+        Event::dispatch('core.locale.create.before');
 
         $locale = $this->localeRepository->create(request()->all());
 
-        Event::fire('core.locale.create.after', $locale);
+        Event::dispatch('core.locale.create.after', $locale);
 
         session()->flash('success', trans('admin::app.settings.locales.create-success'));
 
@@ -106,16 +100,16 @@ class LocaleController extends Controller
     public function update($id)
     {
         $this->validate(request(), [
-            'code' => ['required', 'unique:locales,code,' . $id, new \Webkul\Core\Contracts\Validations\Code],
-            'name' => 'required',
-            'direction' => 'in:ltr,rtl'
+            'code'      => ['required', 'unique:locales,code,' . $id, new \Webkul\Core\Contracts\Validations\Code],
+            'name'      => 'required',
+            'direction' => 'in:ltr,rtl',
         ]);
 
-        Event::fire('core.locale.update.before', $id);
+        Event::dispatch('core.locale.update.before', $id);
 
         $locale = $this->localeRepository->update(request()->all(), $id);
 
-        Event::fire('core.locale.update.after', $locale);
+        Event::dispatch('core.locale.update.after', $locale);
 
         session()->flash('success', trans('admin::app.settings.locales.update-success'));
 
@@ -133,14 +127,14 @@ class LocaleController extends Controller
         $locale = $this->localeRepository->findOrFail($id);
 
         if ($this->localeRepository->count() == 1) {
-            session()->flash('error', trans('admin::app.settings.locales.last-delete-error'));
+            session()->flash('warning', trans('admin::app.settings.locales.last-delete-error'));
         } else {
             try {
-                Event::fire('core.locale.delete.before', $id);
+                Event::dispatch('core.locale.delete.before', $id);
 
                 $this->localeRepository->delete($id);
 
-                Event::fire('core.locale.delete.after', $id);
+                Event::dispatch('core.locale.delete.after', $id);
 
                 session()->flash('success', trans('admin::app.settings.locales.delete-success'));
 

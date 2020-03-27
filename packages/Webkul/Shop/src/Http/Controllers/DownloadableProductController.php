@@ -5,32 +5,19 @@ namespace Webkul\Shop\Http\Controllers;
 use Illuminate\Support\Facades\Storage;
 use Webkul\Sales\Repositories\DownloadableLinkPurchasedRepository;
 
-/**
- * Downloadable Product Controller controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class DownloadableProductController extends Controller
 {
     /**
-     * Contains route related configuration
-     *
-     * @var array
-     */
-    protected $_config;
-
-    /**
      * DownloadableLinkPurchasedRepository object
      *
-     * @var array
+     * @var \Webkul\Sales\Repositories\DownloadableLinkPurchasedRepository
      */
     protected $downloadableLinkPurchasedRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Sales\Repositories\DownloadableLinkPurchasedRepository $downloadableLinkPurchasedRepository
+     * @param  \Webkul\Sales\Repositories\DownloadableLinkPurchasedRepository  $downloadableLinkPurchasedRepository
      * @return void
      */
     public function __construct(
@@ -39,17 +26,18 @@ class DownloadableProductController extends Controller
     {
         $this->middleware('customer');
 
-        $this->_config = request('_config');
-
         $this->downloadableLinkPurchasedRepository = $downloadableLinkPurchasedRepository;
+
+        parent::__construct();
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
     */
-    public function index() {
+    public function index()
+    {
         return view($this->_config['view']);
     }
 
@@ -62,27 +50,29 @@ class DownloadableProductController extends Controller
     public function download($id)
     {
         $downloadableLinkPurchased = $this->downloadableLinkPurchasedRepository->findOneByField([
-                'id' => $id,
-                'customer_id' => auth()->guard('customer')->user()->id,
-            ]);
+            'id'          => $id,
+            'customer_id' => auth()->guard('customer')->user()->id,
+        ]);
 
-        if ($downloadableLinkPurchased->status == 'pending')
+        if ($downloadableLinkPurchased->status == 'pending') {
             abort(403);
+        }
 
         if ($downloadableLinkPurchased->download_bought
             && ($downloadableLinkPurchased->download_bought - $downloadableLinkPurchased->download_used) <= 0) {
+
             session()->flash('warning', trans('shop::app.customer.account.downloadable_products.download-error'));
 
             return redirect()->route('customer.downloadable_products.index');
         }
 
         $remainingDownloads = $downloadableLinkPurchased->download_bought - ($downloadableLinkPurchased->download_used + 1);
-        
+
         if ($downloadableLinkPurchased->download_bought) {
             $this->downloadableLinkPurchasedRepository->update([
-                    'download_used' => $downloadableLinkPurchased->download_used + 1,
-                    'status' => $remainingDownloads <= 0 ? 'expired' : $downloadableLinkPurchased->status
-                ], $downloadableLinkPurchased->id);
+                'download_used' => $downloadableLinkPurchased->download_used + 1,
+                'status'        => $remainingDownloads <= 0 ? 'expired' : $downloadableLinkPurchased->status,
+            ], $downloadableLinkPurchased->id);
         }
 
         if ($downloadableLinkPurchased->type == 'file') {

@@ -26,6 +26,7 @@
                 width: 100%;
                 border-collapse: collapse;
                 text-align: left;
+                table-layout: fixed;
             }
 
             .table thead th {
@@ -45,7 +46,7 @@
                 padding: 5px 10px;
                 border-bottom: solid 1px #d3d3d3;
                 border-left: solid 1px #d3d3d3;
-                color: $font-color;
+                color: #3A3A3A;
                 vertical-align: middle;
                 font-family: DejaVu Sans; sans-serif;
             }
@@ -69,12 +70,18 @@
             }
 
             .sale-summary tr.bold {
-                font-weight: 600;
+                font-family: DejaVu Sans; sans-serif;
+                font-weight: 700;
             }
 
             .label {
                 color: #000;
                 font-weight: 600;
+            }
+
+            .logo {
+                height: 70px;
+                width: 70px;
             }
 
         </style>
@@ -83,16 +90,30 @@
     <body style="background-image: none;background-color: #fff;">
         <div class="container">
 
+            <div class="header">
+                @if (core()->getConfigData('sales.orderSettings.invoice_slip_design.logo'))
+                    <div class="image">
+                        <img class="logo" src="{{ Storage::url(core()->getConfigData('sales.orderSettings.invoice_slip_design.logo')) }}"/>
+                    </div>
+                @endif
+                
+                <div class="address">
+                    <p>
+                      <b> {{ core()->getConfigData('sales.orderSettings.invoice_slip_design.address') }} </b>
+                    </p>
+                </div>
+            </div>
+
             <div class="invoice-summary">
 
                 <div class="row">
                     <span class="label">{{ __('shop::app.customer.account.order.view.invoice-id') }} -</span>
-                    <span class="value">#{{ $invoice->id }}</span>
+                    <span class="value">{{ $invoice->id }}</span>
                 </div>
 
                 <div class="row">
                     <span class="label">{{ __('shop::app.customer.account.order.view.order-id') }} -</span>
-                    <span class="value">#{{ $invoice->order->increment_id }}</span>
+                    <span class="value">{{ $invoice->order->increment_id }}</span>
                 </div>
 
                 <div class="row">
@@ -124,7 +145,7 @@
                                     </p>
                                     {{ __('shop::app.customer.account.order.view.contact') }} : {{ $invoice->order->billing_address->phone }}
                                 </td>
-                                
+
                                 @if ($invoice->order->shipping_address)
                                     <td>
                                         <p>{{ $invoice->order->shipping_address->name }}</p>
@@ -193,7 +214,7 @@
 
                                         @if (isset($item->additional['attributes']))
                                             <div class="item-options">
-                                                
+
                                                 @foreach ($item->additional['attributes'] as $attribute)
                                                     <b>{{ $attribute['attribute_name'] }} : </b>{{ $attribute['option_label'] }}</br>
                                                 @endforeach

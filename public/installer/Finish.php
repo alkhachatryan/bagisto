@@ -7,12 +7,12 @@
                     <div class="content-container" style="padding: 20px">
                         <span>
                             Bagisto is successfully installed on your system.<br>
-                            Click the below button to launch Admin Panel.
+                            Click the below button to launch the admin panel.
                         </span>
                     </div>
                 </div>
 
-                <button  class="prepare-btn" onclick="finish()">Finish</button>
+                <button  class="prepare-btn" onclick="finish()">Continue</button>
             </div>
         </div>
     </body>
@@ -20,9 +20,7 @@
 
 <script>
     function finish() {
-        lastIndex = window.location.href.lastIndexOf("/");
-        secondlast = window.location.href.slice(0, lastIndex).lastIndexOf("/");
-        next = window.location.href.slice(0, secondlast);
+        next = window.location.href.split("/installer")[0];
         next = next.concat('/admin/login');
         window.location.href = next;
     }

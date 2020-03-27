@@ -211,21 +211,13 @@
 
             @elseif ($field['type'] == 'boolean')
 
-                <select v-validate="'{{ $validations }}'" class="control" id="{{ $firstField }}[{{ $secondField }}][{{ $thirdField }}][{{ $field['name'] }}]" name="{{ $firstField }}[{{ $secondField }}][{{ $thirdField }}][{{ $field['name'] }}]" data-vv-as="&quot;{{ trans($field['title']) }}&quot;">
-
-                    <?php
-                        $selectedOption = core()->getConfigData($name) ?? '';
-                    ?>
-
-                    <option value="0" {{ $selectedOption ? '' : 'selected'}}>
-                        {{ __('admin::app.configuration.no') }}
-                    </option>
-
-                    <option value="1" {{ $selectedOption ? 'selected' : ''}}>
-                        {{ __('admin::app.configuration.yes') }}
-                    </option>
-
-                </select>
+                <?php $selectedOption = core()->getConfigData($name) ?? ''; ?>
+                                
+                <label class="switch">
+                    <input type="hidden" name="{{ $firstField }}[{{ $secondField }}][{{ $thirdField }}][{{ $field['name'] }}]" value="0" />
+                    <input type="checkbox" id="{{ $firstField }}[{{ $secondField }}][{{ $thirdField }}][{{ $field['name'] }}]" name="{{ $firstField }}[{{ $secondField }}][{{ $thirdField }}][{{ $field['name'] }}]" value="1" {{ $selectedOption ? 'checked' : '' }}>
+                    <span class="slider round"></span>
+                </label>
 
             @elseif ($field['type'] == 'image')
 
@@ -300,6 +292,8 @@
     @endif
 
 @push('scripts')
+
+<?php if ($field['type'] == 'country'): ?>
 
 <script type="text/x-template" id="country-template">
 
@@ -403,6 +397,8 @@
         }
     });
 </script>
+
+<?php endif; ?>
 
 <script type="text/x-template" id="depends-template">
 

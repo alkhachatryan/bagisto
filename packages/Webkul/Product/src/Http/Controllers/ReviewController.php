@@ -5,12 +5,6 @@ namespace Webkul\Product\Http\Controllers;
 use Illuminate\Support\Facades\Event;
 use Webkul\Product\Repositories\ProductReviewRepository;
 
-/**
- * Review controller
- *
- * @author    Rahul Shukla <rahulshukla.symfony517@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ReviewController extends Controller
 {
     /**
@@ -23,7 +17,7 @@ class ReviewController extends Controller
     /**
      * ProductReviewRepository object
      *
-     * @var Object
+     * @var \Webkul\Product\Repositories\ProductReviewRepository
      */
     protected $productReviewRepository;
 
@@ -33,9 +27,7 @@ class ReviewController extends Controller
      * @param  \Webkul\Product\Repositories\ProductReviewRepository  $productReview
      * @return void
      */
-    public function __construct(
-        ProductReviewRepository $productReviewRepository
-    )
+    public function __construct(ProductReviewRepository $productReviewRepository)
     {
         $this->productReviewRepository = $productReviewRepository;
 
@@ -45,7 +37,7 @@ class ReviewController extends Controller
      /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
     */
     public function index()
     {
@@ -56,7 +48,7 @@ class ReviewController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
@@ -73,11 +65,11 @@ class ReviewController extends Controller
      */
     public function update($id)
     {
-        Event::fire('customer.review.update.before', $id);
+        Event::dispatch('customer.review.update.before', $id);
 
         $this->productReviewRepository->update(request()->all(), $id);
 
-        Event::fire('customer.review.update.after', $id);
+        Event::dispatch('customer.review.update.after', $id);
 
         session()->flash('success', trans('admin::app.response.update-success', ['name' => 'Review']));
 
@@ -95,16 +87,17 @@ class ReviewController extends Controller
         $productReview = $this->productReviewRepository->findOrFail($id);
 
         try {
-            Event::fire('customer.review.delete.before', $id);
+            Event::dispatch('customer.review.delete.before', $id);
 
             $this->productReviewRepository->delete($id);
 
-            Event::fire('customer.review.delete.after', $id);
+            Event::dispatch('customer.review.delete.after', $id);
 
             session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Review']));
 
             return response()->json(['message' => true], 200);
         } catch (\Exception $e) {
+            report($e);
             session()->flash('success', trans('admin::app.response.delete-failed', ['name' => 'Review']));
         }
 
@@ -114,7 +107,7 @@ class ReviewController extends Controller
     /**
      * Mass delete the reviews on the products.
      *
-     * @return response
+     * @return \Illuminate\Http\Response
      */
     public function massDestroy()
     {
@@ -127,11 +120,11 @@ class ReviewController extends Controller
 
             foreach ($indexes as $key => $value) {
                 try {
-                    Event::fire('customer.review.delete.before', $value);
+                    Event::dispatch('customer.review.delete.before', $value);
 
                     $this->productReviewRepository->delete($value);
 
-                    Event::fire('customer.review.delete.after', $value);
+                    Event::dispatch('customer.review.delete.after', $value);
                 } catch(\Exception $e) {
                     $suppressFlash = true;
 
@@ -139,10 +132,11 @@ class ReviewController extends Controller
                 }
             }
 
-            if (! $suppressFlash)
+            if (! $suppressFlash) {
                 session()->flash('success', trans('admin::app.datagrid.mass-ops.delete-success', ['resource' => 'Reviews']));
-            else
+            } else {
                 session()->flash('info', trans('admin::app.datagrid.mass-ops.partial-action', ['resource' => 'Reviews']));
+            }
 
             return redirect()->route($this->_config['redirect']);
 
@@ -156,7 +150,7 @@ class ReviewController extends Controller
     /**
      * Mass approve the reviews on the products.
      *
-     * @return response
+     * @return \Illuminate\Http\Response
      */
     public function massUpdate()
     {
@@ -173,14 +167,14 @@ class ReviewController extends Controller
                 try {
                     if ($data['massaction-type'] == 'update') {
                         if ($data['update-options'] == 1) {
-                            Event::fire('customer.review.update.before', $value);
+                            Event::dispatch('customer.review.update.before', $value);
 
                             $review->update(['status' => 'approved']);
 
-                            Event::fire('customer.review.update.after', $review);
-                        } else if ($data['update-options'] == 0) {
+                            Event::dispatch('customer.review.update.after', $review);
+                        } elseif ($data['update-options'] == 0) {
                             $review->update(['status' => 'pending']);
-                        } else if ($data['update-options'] == 2) {
+                        } elseif ($data['update-options'] == 2) {
                             $review->update(['status' => 'disapproved']);
                         } else {
                             continue;
@@ -193,10 +187,11 @@ class ReviewController extends Controller
                 }
             }
 
-            if (! $suppressFlash)
+            if (! $suppressFlash) {
                 session()->flash('success', trans('admin::app.datagrid.mass-ops.update-success', ['resource' => 'Reviews']));
-            else
+            } else {
                 session()->flash('info', trans('admin::app.datagrid.mass-ops.partial-action', ['resource' => 'Reviews']));
+            }
 
             return redirect()->route($this->_config['redirect']);
         } else {

@@ -2,21 +2,32 @@
 
 namespace Webkul\Sales\Models;
 
+use Webkul\Checkout\Models\CartProxy;
 use Illuminate\Database\Eloquent\Model;
 use Webkul\Sales\Contracts\Order as OrderContract;
 
 class Order extends Model implements OrderContract
 {
-    protected $guarded = ['id', 'items', 'shipping_address', 'billing_address', 'customer', 'channel', 'payment', 'created_at', 'updated_at'];
+    protected $guarded = [
+        'id',
+        'items',
+        'shipping_address',
+        'billing_address',
+        'customer',
+        'channel',
+        'payment',
+        'created_at',
+        'updated_at',
+    ];
 
     protected $statusLabel = [
-        'pending' => 'Pending',
+        'pending'         => 'Pending',
         'pending_payment' => 'Pending Payment',
-        'processing' => 'Processing',
-        'completed' => 'Completed',
-        'canceled' => 'Canceled',
-        'closed' => 'Closed',
-        'fraud' => 'Fraud'
+        'processing'      => 'Processing',
+        'completed'       => 'Completed',
+        'canceled'        => 'Canceled',
+        'closed'          => 'Closed',
+        'fraud'           => 'Fraud',
     ];
 
     /**
@@ -50,6 +61,15 @@ class Order extends Model implements OrderContract
     {
         return $this->grand_total - $this->grand_total_invoiced;
     }
+
+    /**
+     * Get the associated cart that was used to create this order.
+     */
+    public function cart()
+    {
+        return $this->belongsTo(CartProxy::modelClass());
+    }
+
 
     /**
      * Get the order items record associated with the order.
@@ -90,7 +110,7 @@ class Order extends Model implements OrderContract
     {
         return $this->hasMany(RefundProxy::modelClass());
     }
-    
+
     /**
      * Get the customer record associated with the order.
      */
@@ -163,8 +183,9 @@ class Order extends Model implements OrderContract
     public function haveStockableItems()
     {
         foreach ($this->items as $item) {
-            if ($item->getTypeInstance()->isStockable())
+            if ($item->getTypeInstance()->isStockable()) {
                 return true;
+            }
         }
 
         return false;
@@ -175,12 +196,14 @@ class Order extends Model implements OrderContract
      */
     public function canShip()
     {
-        if ($this->status == 'fraud')
+        if ($this->status == 'fraud') {
             return false;
+        }
 
         foreach ($this->items as $item) {
-            if ($item->canShip())
+            if ($item->canShip()) {
                 return true;
+            }
         }
 
         return false;
@@ -191,14 +214,16 @@ class Order extends Model implements OrderContract
      */
     public function canInvoice()
     {
-        if ($this->status == 'fraud')
+        if ($this->status == 'fraud') {
             return false;
-            
-        foreach ($this->items as $item) {
-            if ($item->canInvoice())
-                return true;
         }
-        
+
+        foreach ($this->items as $item) {
+            if ($item->canInvoice()) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -207,12 +232,14 @@ class Order extends Model implements OrderContract
      */
     public function canCancel()
     {
-        if ($this->status == 'fraud')
+        if ($this->status == 'fraud') {
             return false;
-            
+        }
+
         foreach ($this->items as $item) {
-            if ($item->canCancel())
+            if ($item->canCancel()) {
                 return true;
+            }
         }
 
         return false;
@@ -223,16 +250,19 @@ class Order extends Model implements OrderContract
      */
     public function canRefund()
     {
-        if ($this->status == 'fraud')
+        if ($this->status == 'fraud') {
             return false;
-            
-        foreach ($this->items as $item) {
-            if ($item->qty_to_refund > 0)
-                return true;
         }
 
-        if ($this->base_grand_total_invoiced - $this->base_grand_total_refunded - $this->refunds()->sum('base_adjustment_fee') > 0)
+        foreach ($this->items as $item) {
+            if ($item->qty_to_refund > 0) {
+                return true;
+            }
+        }
+
+        if ($this->base_grand_total_invoiced - $this->base_grand_total_refunded - $this->refunds()->sum('base_adjustment_fee') > 0) {
             return true;
+        }
 
         return false;
     }

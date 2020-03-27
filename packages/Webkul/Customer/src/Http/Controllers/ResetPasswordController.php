@@ -8,12 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
 
-/**
- * Reset Password controlller for the customer.
- *
- * @author    Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ResetPasswordController extends Controller
 {
     use ResetsPasswords;
@@ -57,27 +51,33 @@ class ResetPasswordController extends Controller
      */
     public function store()
     {
-        $this->validate(request(), [
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:6',
-        ]);
-
-        $response = $this->broker()->reset(
-            request(['email', 'password', 'password_confirmation', 'token']), function ($customer, $password) {
-                $this->resetPassword($customer, $password);
-            }
-        );
-
-        if ($response == Password::PASSWORD_RESET) {
-            return redirect()->route($this->_config['redirect']);
-        }
-
-        return back()
-            ->withInput(request(['email']))
-            ->withErrors([
-                'email' => trans($response)
+        try {
+            $this->validate(request(), [
+                'token'    => 'required',
+                'email'    => 'required|email',
+                'password' => 'required|confirmed|min:6',
             ]);
+
+            $response = $this->broker()->reset(
+                request(['email', 'password', 'password_confirmation', 'token']), function ($customer, $password) {
+                    $this->resetPassword($customer, $password);
+                }
+            );
+
+            if ($response == Password::PASSWORD_RESET) {
+                return redirect()->route($this->_config['redirect']);
+            }
+
+            return back()
+                ->withInput(request(['email']))
+                ->withErrors([
+                    'email' => trans($response),
+                ]);
+        } catch(\Exception $e) {
+            session()->flash('error', trans($e->getMessage()));
+
+            return redirect()->back();
+        }
     }
 
     /**

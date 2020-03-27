@@ -6,13 +6,8 @@ use Illuminate\Support\Facades\Event;
 use Webkul\Core\Repositories\CoreConfigRepository;
 use Webkul\Core\Tree;
 use Illuminate\Support\Facades\Storage;
+use Webkul\Admin\Http\Requests\ConfigurationForm;
 
-/**
- * Configuration controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ConfigurationController extends Controller
 {
     /**
@@ -25,7 +20,7 @@ class ConfigurationController extends Controller
     /**
      * CoreConfigRepository object
      *
-     * @var array
+     * @var \Webkul\Core\Repositories\CoreConfigRepository
      */
     protected $coreConfigRepository;
 
@@ -38,7 +33,7 @@ class ConfigurationController extends Controller
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Core\Repositories\CoreConfigRepository $coreConfigRepository
+     * @param  \Webkul\Core\Repositories\CoreConfigRepository  $coreConfigRepository
      * @return void
      */
     public function __construct(CoreConfigRepository $coreConfigRepository)
@@ -50,7 +45,6 @@ class ConfigurationController extends Controller
         $this->_config = request('_config');
 
         $this->prepareConfigTree();
-
     }
 
     /**
@@ -113,16 +107,16 @@ class ConfigurationController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Webkul\Admin\Http\Requests\ConfigurationForm $request
+     * @param  \Webkul\Admin\Http\Requests\ConfigurationForm  $request
      * @return \Illuminate\Http\Response
      */
-    public function store()
+    public function store(ConfigurationForm $request)
     {
-        Event::fire('core.configuration.save.before');
+        Event::dispatch('core.configuration.save.before');
 
         $this->coreConfigRepository->create(request()->all());
 
-        Event::fire('core.configuration.save.after');
+        Event::dispatch('core.configuration.save.after');
 
         session()->flash('success', trans('admin::app.configuration.save-message'));
 
@@ -146,8 +140,7 @@ class ConfigurationController extends Controller
     }
 
     /**
-     * @param $secondItem
-     *
+     * @param  string  $secondItem
      * @return array
      */
     private function getSlugs($secondItem): array

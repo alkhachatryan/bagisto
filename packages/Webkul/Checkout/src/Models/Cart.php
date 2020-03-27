@@ -10,11 +10,16 @@ class Cart extends Model implements CartContract
 {
     protected $table = 'cart';
 
-    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $guarded = [
+        'id',
+        'created_at',
+        'updated_at',
+    ];
 
-    protected $hidden = ['coupon_code'];
-
-    protected $with = ['items', 'items.children'];
+    protected $with = [
+        'items',
+        'items.children',
+    ];
 
     /**
      * To get relevant associated items with the cart instance
@@ -110,25 +115,58 @@ class Cart extends Model implements CartContract
     public function haveStockableItems()
     {
         foreach ($this->items as $item) {
-            if ($item->product->isStockable())
+            if ($item->product->isStockable()) {
                 return true;
+            }
         }
 
         return false;
     }
 
     /**
-     * Checks if cart have downloadable items
+     * Checks if cart has downloadable items
      *
      * @return boolean
      */
-    public function haveDownloadableItems()
+    public function hasDownloadableItems()
     {
         foreach ($this->items as $item) {
-            if ($item->type == 'downloadable')
+            if (stristr($item->type,'downloadable') !== false) {
                 return true;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Returns true if cart contains one or many products with quantity box.
+     * (for example: simple, configurable, virtual)
+     * @return bool
+     */
+    public function hasProductsWithQuantityBox(): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->product->getTypeInstance()->showQuantityBox() === true) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if cart has items that allow guest checkout
+     *
+     * @return boolean
+     */
+    public function hasGuestCheckoutItems()
+    {
+        foreach ($this->items as $item) {
+            if ($item->product->getAttribute('guest_checkout') === 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

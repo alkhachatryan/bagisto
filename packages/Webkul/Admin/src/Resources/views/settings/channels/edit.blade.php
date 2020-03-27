@@ -78,9 +78,11 @@
                                 <span class="control-error" v-if="errors.has('root_category_id')">@{{ errors.first('root_category_id') }}</span>
                             </div>
 
-                            <div class="control-group">
+                            <div class="control-group" :class="[errors.has('hostname') ? 'has-error' : '']">
                                 <label for="hostname">{{ __('admin::app.settings.channels.hostname') }}</label>
-                                <input type="text" class="control" id="hostname" name="hostname" value="{{ $channel->hostname }}" placeholder="https://www.example.com"/>
+                                <input type="text" v-validate="''" class="control" id="hostname" name="hostname" value="{{ $channel->hostname }}" placeholder="https://www.example.com"/>
+
+                                <span class="control-error" v-if="errors.has('hostname')">@{{ errors.first('hostname') }}</span>
                             </div>
 
                         </div>
@@ -171,13 +173,13 @@
                             </div>
 
                             <div class="control-group">
-                                <label>{{ __('admin::app.settings.channels.logo') }}
+                                <label>{{ __('admin::app.settings.channels.logo') }}</label>
 
                                 <image-wrapper :button-label="'{{ __('admin::app.catalog.products.add-image-btn-title') }}'" input-name="logo" :multiple="false" :images='"{{ $channel->logo_url }}"'></image-wrapper>
                             </div>
 
                             <div class="control-group">
-                                <label>{{ __('admin::app.settings.channels.favicon') }}
+                                <label>{{ __('admin::app.settings.channels.favicon') }}</label>
 
                                 <image-wrapper :button-label="'{{ __('admin::app.catalog.products.add-image-btn-title') }}'" input-name="favicon" :multiple="false" :images='"{{ $channel->favicon_url }}"'></image-wrapper>
                             </div>

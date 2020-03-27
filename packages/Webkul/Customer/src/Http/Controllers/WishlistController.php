@@ -6,13 +6,6 @@ use Webkul\Product\Repositories\ProductRepository;
 use Webkul\Customer\Repositories\WishlistRepository;
 use Cart;
 
-/**
- * Customer controller
- *
- * @author    Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
-
 class WishlistController extends Controller
 {
     /**
@@ -25,22 +18,22 @@ class WishlistController extends Controller
     /**
      * ProductRepository object
      *
-     * @var Object
+     * @var \Webkul\Customer\Repositories\WishlistRepository
     */
     protected $wishlistRepository;
 
     /**
      * WishlistRepository object
      *
-     * @var Object
+     * @var \Webkul\Product\Repositories\ProductRepository
     */
     protected $productRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Customer\Repositories\WishlistRepository $wishlistRepository
-     * @param  \Webkul\Product\Repositories\ProductRepository   $productRepository
+     * @param  \Webkul\Customer\Repositories\WishlistRepository  $wishlistRepository
+     * @param  \Webkul\Product\Repositories\ProductRepository  $productRepository
      * @return void
      */
     public function __construct(
@@ -59,15 +52,12 @@ class WishlistController extends Controller
 
     /**
      * Displays the listing resources if the customer having items in wishlist.
-     * 
+     *
      * @return \Illuminate\View\View
      */
     public function index()
     {
-        $wishlistItems = $this->wishlistRepository->findWhere([
-            'channel_id' => core()->getCurrentChannel()->id,
-            'customer_id' => auth()->guard('customer')->user()->id]
-        );
+        $wishlistItems = $this->wishlistRepository->getCustomerWhishlist();
 
         return view($this->_config['view'])->with('items', $wishlistItems);
     }
@@ -75,7 +65,8 @@ class WishlistController extends Controller
     /**
      * Function to add item to the wishlist.
      *
-     * @param integer $itemId
+     * @param  int  $itemId
+     * @return \Illuminate\Http\Response
      */
     public function add($itemId)
     {
@@ -85,16 +76,16 @@ class WishlistController extends Controller
             return redirect()->back();
 
         $data = [
-            'channel_id' => core()->getCurrentChannel()->id,
-            'product_id' => $itemId,
-            'customer_id' => auth()->guard('customer')->user()->id
+            'channel_id'  => core()->getCurrentChannel()->id,
+            'product_id'  => $itemId,
+            'customer_id' => auth()->guard('customer')->user()->id,
         ];
 
         $checked = $this->wishlistRepository->findWhere([
-                'channel_id' => core()->getCurrentChannel()->id,
-                'product_id' => $itemId,
-                'customer_id' => auth()->guard('customer')->user()->id
-            ]);
+            'channel_id'  => core()->getCurrentChannel()->id,
+            'product_id'  => $itemId,
+            'customer_id' => auth()->guard('customer')->user()->id,
+        ]);
 
         //accidental case if some one adds id of the product in the anchor tag amd gives id of a variant.
         if ($product->parent_id != null) {
@@ -113,7 +104,11 @@ class WishlistController extends Controller
                 return redirect()->back();
             }
         } else {
-            session()->flash('warning', trans('customer::app.wishlist.already'));
+            $this->wishlistRepository->findOneWhere([
+                'product_id' => $data['product_id']
+            ])->delete();
+
+            session()->flash('success', trans('customer::app.wishlist.removed'));
 
             return redirect()->back();
         }
@@ -122,7 +117,8 @@ class WishlistController extends Controller
     /**
      * Function to remove item to the wishlist.
      *
-     * @param integer $itemId
+     * @param  int  $itemId
+     * @return \Illuminate\Http\Response
      */
     public function remove($itemId)
     {
@@ -146,41 +142,45 @@ class WishlistController extends Controller
     /**
      * Function to move item from wishlist to cart.
      *
-     * @param integer $itemId
+     * @param  int  $itemId
+     * @return \Illuminate\Http\Response
      */
     public function move($itemId)
     {
         $wishlistItem = $this->wishlistRepository->findOneWhere([
-                'id' => $itemId,
-                'customer_id' => auth()->guard('customer')->user()->id
+                'id'          => $itemId,
+                'customer_id' => auth()->guard('customer')->user()->id,
             ]);
 
-        if (! $wishlistItem)
+        if (! $wishlistItem) {
             abort(404);
+        }
 
         try {
             $result = Cart::moveToCart($wishlistItem);
 
             if ($result) {
-                session()->flash('success', trans('shop::app.wishlist.moved'));
+                session()->flash('success', trans('shop::app.customer.account.wishlist.moved'));
             } else {
-                session()->flash('info', trans('shop::app.wishlist.option-missing'));
+                session()->flash('info', trans('shop::app.checkout.cart.integrity.missing_options'));
 
-                return redirect()->route('shop.products.index', $wishlistItem->product->url_key);
+                return redirect()->route('shop.productOrCategory.index', $wishlistItem->product->url_key);
             }
 
             return redirect()->back();
         } catch (\Exception $e) {
+            report($e);
+
             session()->flash('warning', $e->getMessage());
 
-            return redirect()->route('shop.products.index', ['slug' => $wishlistItem->product->url_key]);
+            return redirect()->route('shop.productOrCategory.index',  $wishlistItem->product->url_key);
         }
     }
 
     /**
      * Function to remove all of the items items in the customer's wishlist
      *
-     * @return Mixed Response & Boolean
+     * @return \Illuminate\Http\Response
      */
     public function removeAll()
     {

@@ -4,19 +4,14 @@ namespace Webkul\Product\Repositories;
 
 use Illuminate\Support\Facades\Storage;
 use Webkul\Core\Eloquent\Repository;
+use Illuminate\Support\Str;
 
-/**
- * Product Downloadable Sample Reposotory
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ProductDownloadableSampleRepository extends Repository
 {
     /**
      * Specify Model class name
      *
-     * @return mixed
+     * @return string
      */
     function model()
     {
@@ -24,17 +19,17 @@ class ProductDownloadableSampleRepository extends Repository
     }
 
     /**
-     * @param  array   $data
-     * @param  integer $productId
+     * @param  array  $data
+     * @param  int  $productId
      * @return mixed
      */
     public function upload($data, $productId)
     {
         if (request()->hasFile('file')) {
             return [
-                'file' => $path = request()->file('file')->store('product/' . $productId),
+                'file'      => $path = request()->file('file')->store('product_downloadable_links/' . $productId),
                 'file_name' => request()->file('file')->getClientOriginalName(),
-                'file_url' => Storage::url($path)
+                'file_url'  => Storage::url($path),
             ];
         }
 
@@ -42,8 +37,8 @@ class ProductDownloadableSampleRepository extends Repository
     }
 
     /**
-     * @param array $data
-     * @param mixed $product
+     * @param  array  $data
+     * @param  Webkul\Product\Contracts\Product  $product
      * @return void
      */
     public function saveSamples(array $data, $product)
@@ -52,10 +47,10 @@ class ProductDownloadableSampleRepository extends Repository
 
         if (isset($data['downloadable_samples'])) {
             foreach ($data['downloadable_samples'] as $sampleId => $data) {
-                if (str_contains($sampleId, 'sample_')) {
+                if (Str::contains($sampleId, 'sample_')) {
                     $this->create(array_merge([
-                            'product_id' => $product->id,
-                        ], $data));
+                        'product_id' => $product->id,
+                    ], $data));
                 } else {
                     if (is_numeric($index = $previousSampleIds->search($sampleId))) {
                         $previousSampleIds->forget($index);

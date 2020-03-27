@@ -5,12 +5,6 @@ namespace Webkul\Customer\Http\Controllers;
 use Illuminate\Support\Facades\Event;
 use Cookie;
 
-/**
- * Session controller for the user customer
- *
- * @author    Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class SessionController extends Controller
 {
     /**
@@ -54,8 +48,8 @@ class SessionController extends Controller
     public function create()
     {
         $this->validate(request(), [
-            'email' => 'required|email',
-            'password' => 'required'
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
         if (! auth()->guard('customer')->attempt(request(['email', 'password']))) {
@@ -85,7 +79,7 @@ class SessionController extends Controller
         }
 
         //Event passed to prepare cart after login
-        Event::fire('customer.after.login', request('email'));
+        Event::dispatch('customer.after.login', request('email'));
 
         return redirect()->intended(route($this->_config['redirect']));
     }
@@ -100,7 +94,7 @@ class SessionController extends Controller
     {
         auth()->guard('customer')->logout();
 
-        Event::fire('customer.after.logout', $id);
+        Event::dispatch('customer.after.logout', $id);
 
         return redirect()->route($this->_config['redirect']);
     }

@@ -6,13 +6,6 @@ use Hash;
 use Webkul\Customer\Repositories\CustomerRepository;
 use Webkul\Product\Repositories\ProductReviewRepository;
 
-/**
- * Customer controlller for the customer basically for the tasks of customers which will be
- * done after customer authentication.
- *
- * @author  Prashant Singh <prashant.singh852@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class CustomerController extends Controller
 {
     /**
@@ -25,25 +18,28 @@ class CustomerController extends Controller
     /**
      * CustomerRepository object
      *
-     * @var Object
-    */
+     * @var \Webkul\Customer\Repositories\CustomerRepository
+     */
     protected $customerRepository;
 
     /**
      * ProductReviewRepository object
      *
-     * @var array
-    */
+     * @var \Webkul\Customer\Repositories\ProductReviewRepository
+     */
     protected $productReviewRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\Customer\Repositories\CustomerRepository $customer
-     * @param  \Webkul\Product\Repositories\ProductReviewRepository $productReview
+     * @param  \Webkul\Customer\Repositories\CustomerRepository  $customer
+     * @param  \Webkul\Product\Repositories\ProductReviewRepository  $productReview
      * @return void
-    */
-    public function __construct(CustomerRepository $customerRepository, ProductReviewRepository $productReviewRepository)
+     */
+    public function __construct(
+        CustomerRepository $customerRepository,
+        ProductReviewRepository $productReviewRepository
+    )
     {
         $this->middleware('customer');
 
@@ -81,37 +77,41 @@ class CustomerController extends Controller
     /**
      * Edit function for editing customer profile.
      *
-     * @return response
+     * @return \Illuminate\Http\Response
      */
     public function update()
     {
         $id = auth()->guard('customer')->user()->id;
 
         $this->validate(request(), [
-            'first_name' => 'string',
-            'last_name' => 'string',
-            'gender' => 'required',
-            'date_of_birth' => 'date|before:today',
-            'email' => 'email|unique:customers,email,'.$id,
-            'oldpassword' => 'required_with:password',
-            'password' => 'confirmed|min:6'
+            'first_name'            => 'string',
+            'last_name'             => 'string',
+            'gender'                => 'required',
+            'date_of_birth'         => 'date|before:today',
+            'email'                 => 'email|unique:customers,email,' . $id,
+            'password'              => 'confirmed|min:6|required_with:oldpassword',
+            'oldpassword'           => 'required_with:password',
+            'password_confirmation' => 'required_with:password',
         ]);
 
         $data = collect(request()->input())->except('_token')->toArray();
 
-        if ($data['date_of_birth'] == "")
+        if (isset ($data['date_of_birth']) && $data['date_of_birth'] == "") {
             unset($data['date_of_birth']);
+        }
 
-        if ($data['oldpassword'] != "" || $data['oldpassword'] != null) {
-            if(Hash::check($data['oldpassword'], auth()->guard('customer')->user()->password)) {
-                $data['password'] = bcrypt($data['password']);
+        if (isset ($data['oldpassword'])) {
+            if ($data['oldpassword'] != "" || $data['oldpassword'] != null) {
+                if (Hash::check($data['oldpassword'], auth()->guard('customer')->user()->password)) {
+                    $data['password'] = bcrypt($data['password']);
+                } else {
+                    session()->flash('warning', trans('shop::app.customer.account.profile.unmatch'));
+
+                    return redirect()->back();
+                }
             } else {
-                session()->flash('warning', trans('shop::app.customer.account.profile.unmatch'));
-
-                return redirect()->back();
+                unset($data['password']);
             }
-        } else {
-            unset($data['password']);
         }
 
         if ($this->customerRepository->update($data, $id)) {
@@ -128,7 +128,7 @@ class CustomerController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
@@ -139,28 +139,27 @@ class CustomerController extends Controller
 
         $customerRepository = $this->customerRepository->findorFail($id);
 
-        $orders = $customerRepository->all_orders->whereIn('status', ['pending', 'processing'])->first();
-
-        if ( $orders ) {
-            session()->flash('error', trans('admin::app.response.order-pending'));
-
-            return redirect()->route($this->_config['redirect']);
-        }
-
         try {
-            if ( Hash::check($data['password'], $customerRepository->password) ) {
+            if (Hash::check($data['password'], $customerRepository->password)) {
+                $orders = $customerRepository->all_orders->whereIn('status', ['pending', 'processing'])->first();
 
-                $this->customerRepository->delete($id);
+                if ($orders) {
+                    session()->flash('error', trans('admin::app.response.order-pending'));
 
-                session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Customer']));
+                    return redirect()->route($this->_config['redirect']);
+                } else {
+                    $this->customerRepository->delete($id);
 
-                return redirect()->route('customer.session.index');
+                    session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Customer']));
+
+                    return redirect()->route('customer.session.index');
+                }
             } else {
                 session()->flash('error', trans('shop::app.customer.account.address.delete.wrong-password'));
-            }
 
-            return redirect()->route('customer.session.index');
-        } catch(\Exception $e) {
+                return redirect()->back();
+            }
+        } catch (\Exception $e) {
             session()->flash('error', trans('admin::app.response.delete-failed', ['name' => 'Customer']));
 
             return redirect()->route($this->_config['redirect']);

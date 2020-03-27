@@ -2,6 +2,7 @@
 
 namespace Webkul\Core\Providers;
 
+use Illuminate\Database\Eloquent\Factory as EloquentFactory;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\AliasLoader;
@@ -22,6 +23,8 @@ class CoreServiceProvider extends ServiceProvider
         include __DIR__ . '/../Http/helpers.php';
 
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+
+        $this->registerEloquentFactoriesFrom(__DIR__ . '/../Database/Factories');
 
         $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'core');
 
@@ -47,6 +50,7 @@ class CoreServiceProvider extends ServiceProvider
     {
         $this->registerFacades();
     }
+
     /**
      * Register Bouncer as a singleton.
      *
@@ -60,5 +64,17 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->singleton('core', function () {
             return app()->make(Core::class);
         });
+    }
+
+    /**
+     * Register factories.
+     *
+     * @param string $path
+     *
+     * @return void
+     */
+    protected function registerEloquentFactoriesFrom($path): void
+    {
+        $this->app->make(EloquentFactory::class)->load($path);
     }
 }

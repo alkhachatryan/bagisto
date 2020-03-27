@@ -2,6 +2,7 @@
 
 namespace Webkul\Product\Providers;
 
+use Illuminate\Database\Eloquent\Factory as EloquentFactory;
 use Illuminate\Support\ServiceProvider;
 use Webkul\Product\Models\ProductProxy;
 use Webkul\Product\Observers\ProductObserver;
@@ -18,6 +19,8 @@ class ProductServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
+        $this->app->make(EloquentFactory::class)->load(__DIR__ . '/../Database/Factories');
+
         $this->app->register(EventServiceProvider::class);
 
         $this->publishes([
@@ -32,14 +35,22 @@ class ProductServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->registerConfig();
 
         $this->registerCommands();
+
+        $this->registerEloquentFactoriesFrom(__DIR__ . '/../Database/Factories');
     }
 
-    public function registerConfig() {
+    /**
+     * Register Configuration
+     *
+     * @return void
+     */
+    public function registerConfig(): void
+    {
         $this->mergeConfigFrom(
             dirname(__DIR__) . '/Config/product_types.php', 'product_types'
         );
@@ -47,10 +58,24 @@ class ProductServiceProvider extends ServiceProvider
 
     /**
      * Register the console commands of this package
+     *
+     * @return void
      */
-    protected function registerCommands()
+    protected function registerCommands(): void
     {
-        if ($this->app->runningInConsole())
+        if ($this->app->runningInConsole()) {
             $this->commands([PriceUpdate::class,]);
+        }
+    }
+
+    /**
+     * Register factories.
+     *
+     * @param  string  $path
+     * @return void
+     */
+    protected function registerEloquentFactoriesFrom($path): void
+    {
+        $this->app->make(EloquentFactory::class)->load($path);
     }
 }

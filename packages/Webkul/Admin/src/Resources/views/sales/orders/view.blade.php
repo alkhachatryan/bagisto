@@ -48,6 +48,8 @@
         <div class="page-content">
 
             <tabs>
+                {!! view_render_event('sales.order.tabs.before', ['order' => $order]) !!}
+
                 <tab name="{{ __('admin::app.sales.orders.info') }}" :selected="true">
                     <div class="sale-container">
 
@@ -264,7 +266,7 @@
 
                                                         @if (isset($item->additional['attributes']))
                                                             <div class="item-options">
-                                                                
+
                                                                 @foreach ($item->additional['attributes'] as $attribute)
                                                                     <b>{{ $attribute['attribute_name'] }} : </b>{{ $attribute['option_label'] }}</br>
                                                                 @endforeach
@@ -330,7 +332,13 @@
 
                                     @if ($order->base_discount_amount > 0)
                                         <tr>
-                                            <td>{{ __('admin::app.sales.orders.discount') }}</td>
+                                            <td>
+                                                {{ __('admin::app.sales.orders.discount') }}
+
+                                                @if ($order->coupon_code)
+                                                    ({{ $order->coupon_code }})
+                                                @endif
+                                            </td>
                                             <td>-</td>
                                             <td>{{ core()->formatBasePrice($order->base_discount_amount) }}</td>
                                         </tr>
@@ -426,9 +434,8 @@
                                     <tr>
                                         <th>{{ __('admin::app.sales.shipments.id') }}</th>
                                         <th>{{ __('admin::app.sales.shipments.date') }}</th>
-                                        <th>{{ __('admin::app.sales.shipments.order-id') }}</th>
-                                        <th>{{ __('admin::app.sales.shipments.order-date') }}</th>
-                                        <th>{{ __('admin::app.sales.shipments.customer-name') }}</th>
+                                        <th>{{ __('admin::app.sales.shipments.carrier-title') }}</th>
+                                        <th>{{ __('admin::app.sales.shipments.tracking-number') }}</th>
                                         <th>{{ __('admin::app.sales.shipments.total-qty') }}</th>
                                         <th>{{ __('admin::app.sales.shipments.action') }}</th>
                                     </tr>
@@ -440,9 +447,8 @@
                                         <tr>
                                             <td>#{{ $shipment->id }}</td>
                                             <td>{{ $shipment->created_at }}</td>
-                                            <td>#{{ $shipment->order->id }}</td>
-                                            <td>{{ $shipment->order->created_at }}</td>
-                                            <td>{{ $shipment->address->name }}</td>
+                                            <td>{{ $shipment->carrier_title }}</td>
+                                            <td>{{ $shipment->track_number }}</td>
                                             <td>{{ $shipment->total_qty }}</td>
                                             <td class="action">
                                                 <a href="{{ route('admin.sales.shipments.view', $shipment->id) }}">
@@ -506,6 +512,8 @@
                     </div>
 
                 </tab>
+
+                {!! view_render_event('sales.order.tabs.after', ['order' => $order]) !!}
             </tabs>
         </div>
 

@@ -24,12 +24,15 @@ class ConfigurationForm extends FormRequest
      */
     public function rules()
     {
-        $this->rules = [
-            'sales.*.*.title'  => 'required',
-            'sales.*.*.active'  => 'required',
-            'sales.*.*.order_status' => 'required',
-            'sales.*.*.file' => 'max:2048',
-        ];
+        $this->rules = [];
+
+        if (request()->has('general.design.admin_logo.logo_image')
+            && ! request()->input('general.design.admin_logo.logo_image.delete')
+        ) {
+            $this->rules = [
+                'general.design.admin_logo.logo_image'  => 'required|mimes:jpeg,bmp,png,jpg',
+            ];
+        }
 
         return $this->rules;
     }
@@ -38,13 +41,11 @@ class ConfigurationForm extends FormRequest
      * Get the error messages for the defined validation rules.
      *
      * @return array
-    */
+     */
     public function messages()
     {
         return [
-            'sales.*.*.title.required' => 'The title field is required.',
-            'sales.*.*.active.required' => 'The status field is required.',
-            'sales.*.*.order_status.required' => 'Order Status field is required',
+            'general.design.admin_logo.logo_image.mimes' => 'Invalid file format. Use only jpeg, bmp, png, jpg.',
         ];
     }
 }

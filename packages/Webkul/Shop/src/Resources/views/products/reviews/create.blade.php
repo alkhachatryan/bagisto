@@ -15,13 +15,13 @@
                 <?php $productBaseImage = $productImageHelper->getProductBaseImage($product); ?>
 
                 <div class="product-image">
-                    <a href="{{ route('shop.products.index', $product->url_key) }}" title="{{ $product->name }}">
+                    <a href="{{ route('shop.productOrCategory.index', $product->url_key) }}" title="{{ $product->name }}">
                         <img src="{{ $productBaseImage['medium_image_url'] }}" />
                     </a>
                 </div>
 
                 <div class="product-name mt-20">
-                    <a href="{{ url()->to('/').'/products/'.$product->url_key }}" title="{{ $product->name }}">
+                    <a href="{{ route('shop.productOrCategory.index', $product->url_key) }}" title="{{ $product->name }}">
                         <span>{{ $product->name }}</span>
                     </a>
                 </div>
@@ -64,7 +64,7 @@
                         <span class="control-error" v-if="errors.has('title')">@{{ errors.first('title') }}</span>
                     </div>
 
-                    @if ($guest_review && ! auth()->guard('customer')->user())
+                    @if (core()->getConfigData('catalog.products.review.guest_review') && ! auth()->guard('customer')->user())
                         <div class="control-group" :class="[errors.has('name') ? 'has-error' : '']">
                             <label for="title" class="required">
                                 {{ __('shop::app.reviews.name') }}

@@ -2,16 +2,11 @@
 
 namespace Webkul\Admin\Http\Controllers\Customer;
 
+use Webkul\Customer\Rules\VatIdRule;
 use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Customer\Repositories\CustomerRepository as Customer;
-use Webkul\Customer\Repositories\CustomerAddressRepository as CustomerAddress;
+use Webkul\Customer\Repositories\CustomerRepository;
+use Webkul\Customer\Repositories\CustomerAddressRepository;
 
-/**
- * Customer's Address controller
- *
- * @author    Vivek Sharma <viveksh047@webkul.com>
- * @copyright 2019 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class AddressController extends Controller
 {
     /**
@@ -20,35 +15,36 @@ class AddressController extends Controller
      * @var array
      */
     protected $_config;
-        
+
     /**
      * Customer Repository object
      *
-     * @var object
-    */
-    protected $customer;
-    
+     * @var \Webkul\Customer\Repositories\CustomerRepository
+     */
+    protected $customerRepository;
+
     /**
      * CustomerAddress Repository object
      *
-     * @var object
-    */
-    protected $customerAddress;
-    
+     * @var \Webkul\Customer\Repositories\CustomerAddressRepository
+     */
+    protected $customerAddressRepository;
+
     /**
      * Create a new controller instance.
      *
-     * @param  Webkul\Customer\Repositories\CustomerAddressRepository $customerAddress
+     * @param  \Webkul\Customer\Repositories\CustomerRepository         $customerRepository
+     * @param  \Webkul\Customer\Repositories\CustomerAddressRepository  $customerAddressRepository
      * @return void
      */
     public function __construct(
-        Customer $customer,
-        CustomerAddress $customerAddress
+        CustomerRepository $customerRepository,
+        CustomerAddressRepository $customerAddressRepository
     )
     {
-        $this->customer = $customer;
+        $this->customerRepository = $customerRepository;
 
-        $this->customerAddress = $customerAddress;
+        $this->customerAddressRepository = $customerAddressRepository;
 
         $this->_config = request('_config');
     }
@@ -56,11 +52,12 @@ class AddressController extends Controller
     /**
      * Method to populate the seller order page which will be populated.
      *
-     * @return Mixed
+     * @param  int  $id
+     * @return \Illuminate\View\View
      */
     public function index($id)
-    {   
-        $customer = $this->customer->find($id);
+    {
+        $customer = $this->customerRepository->find($id);
 
         return view($this->_config['view'], compact('customer'));
     }
@@ -68,11 +65,12 @@ class AddressController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @param  int  $id
+     * @return \Illuminate\View\View
      */
     public function create($id)
     {
-        $customer = $this->customer->find($id);
+        $customer = $this->customerRepository->find($id);
 
         return view($this->_config['view'], compact('customer'));
     }
@@ -84,20 +82,24 @@ class AddressController extends Controller
      */
     public function store()
     {
-       request()->merge(['address1' => implode(PHP_EOL, array_filter(request()->input('address1')))]);
+        request()->merge([
+            'address1' => implode(PHP_EOL, array_filter(request()->input('address1'))),
+        ]);
 
         $data = collect(request()->input())->except('_token')->toArray();
 
         $this->validate(request(), [
-            'address1' => 'string|required',
-            'country' => 'string|required',
-            'state' => 'string|required',
-            'city' => 'string|required',
-            'postcode' => 'required',
-            'phone' => 'required'
+            'company_name' => 'string',
+            'address1'     => 'string|required',
+            'country'      => 'string|required',
+            'state'        => 'string|required',
+            'city'         => 'string|required',
+            'postcode'     => 'required',
+            'phone'        => 'required',
+            'vat_id'       => new VatIdRule(),
         ]);
 
-        if ( $this->customerAddress->create($data) ) {
+        if ($this->customerAddressRepository->create($data)) {
             session()->flash('success', trans('admin::app.customers.addresses.success-create'));
 
             return redirect()->route('admin.customer.addresses.index', ['id' => $data['customer_id']]);
@@ -111,41 +113,43 @@ class AddressController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return Mixed
+     * @param  int  $id
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
-        $address = $this->customerAddress->find($id);
+        $address = $this->customerAddressRepository->find($id);
 
         return view($this->_config['view'], compact('address'));
     }
 
     /**
-     * Edit's the premade resource of customer called
-     * Address.
+     * Edit's the premade resource of customer called Address.
      *
-     * @return redirect
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
      */
     public function update($id)
     {
         request()->merge(['address1' => implode(PHP_EOL, array_filter(request()->input('address1')))]);
 
         $this->validate(request(), [
-            'address1' => 'string|required',
-            'country' => 'string|required',
-            'state' => 'string|required',
-            'city' => 'string|required',
-            'postcode' => 'required',
-            'phone' => 'required'
+            'company_name' => 'string',
+            'address1'     => 'string|required',
+            'country'      => 'string|required',
+            'state'        => 'string|required',
+            'city'         => 'string|required',
+            'postcode'     => 'required',
+            'phone'        => 'required',
+            'vat_id'       => new VatIdRule(),
         ]);
 
         $data = collect(request()->input())->except('_token')->toArray();
 
-        $address = $this->customerAddress->find($id);
+        $address = $this->customerAddressRepository->find($id);
 
-        if ( $address ) {
-
-            $this->customerAddress->update($data, $id);
+        if ($address) {
+            $this->customerAddressRepository->update($data, $id);
 
             session()->flash('success', trans('admin::app.customers.addresses.success-update'));
 
@@ -162,7 +166,7 @@ class AddressController extends Controller
      */
     public function destroy($id)
     {
-        $this->customerAddress->delete($id);
+        $this->customerAddressRepository->delete($id);
 
         session()->flash('success', trans('admin::app.customers.addresses.success-delete'));
 
@@ -172,14 +176,15 @@ class AddressController extends Controller
     /**
      * Mass Delete the customer's addresses
      *
-     * @return response
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
      */
     public function massDestroy($id)
     {
         $addressIds = explode(',', request()->input('indexes'));
 
         foreach ($addressIds as $addressId) {
-            $this->customerAddress->delete($addressId);
+            $this->customerAddressRepository->delete($addressId);
         }
 
         session()->flash('success', trans('admin::app.customers.addresses.success-mass-delete'));

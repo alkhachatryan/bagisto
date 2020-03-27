@@ -2,18 +2,13 @@
 
 namespace Webkul\User\Http\Controllers;
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Event;
 use Webkul\User\Repositories\AdminRepository;
 use Webkul\User\Repositories\RoleRepository;
 use Webkul\User\Http\Requests\UserForm;
 use Hash;
 
-/**
- * Admin user controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class UserController extends Controller
 {
     /**
@@ -26,22 +21,22 @@ class UserController extends Controller
     /**
      * AdminRepository object
      *
-     * @var Object
+     * @var \Webkul\User\Repositories\AdminRepository
      */
     protected $adminRepository;
 
     /**
      * RoleRepository object
      *
-     * @var Object
+     * @var \Webkul\User\Repositories\RoleRepository
      */
     protected $roleRepository;
 
     /**
      * Create a new controller instance.
      *
-     * @param  \Webkul\User\Repositories\AdminRepository $adminRepository
-     * @param  \Webkul\User\Repositories\RoleRepository $roleRepository
+     * @param  \Webkul\User\Repositories\AdminRepository  $adminRepository
+     * @param  \Webkul\User\Repositories\RoleRepository  $roleRepository
      * @return void
      */
     public function __construct(
@@ -61,7 +56,7 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -71,7 +66,7 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\View\View 
+     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -90,14 +85,16 @@ class UserController extends Controller
     {
         $data = $request->all();
 
-        if (isset($data['password']) && $data['password'])
+        if (isset($data['password']) && $data['password']) {
             $data['password'] = bcrypt($data['password']);
+            $data['api_token'] = Str::random(80);
+        }
 
-        Event::fire('user.admin.create.before');
+        Event::dispatch('user.admin.create.before');
 
         $admin = $this->adminRepository->create($data);
 
-        Event::fire('user.admin.create.after', $admin);
+        Event::dispatch('user.admin.create.after', $admin);
 
         session()->flash('success', trans('admin::app.response.create-success', ['name' => 'User']));
 
@@ -107,8 +104,8 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param integer $id
-     * @return \Illuminate\View\View 
+     * @param  int  $id
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
@@ -124,16 +121,17 @@ class UserController extends Controller
      *
      * @param  \Webkul\User\Http\Requests\UserForm  $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\Response
      */
     public function update(UserForm $request, $id)
     {
         $data = $request->all();
 
-        if (! $data['password'])
+        if (! $data['password']) {
             unset($data['password']);
-        else
+        } else {
             $data['password'] = bcrypt($data['password']);
+        }
 
         if (isset($data['status'])) {
             $data['status'] = 1;
@@ -141,11 +139,11 @@ class UserController extends Controller
             $data['status'] = 0;
         }
 
-        Event::fire('user.admin.update.before', $id);
+        Event::dispatch('user.admin.update.before', $id);
 
         $admin = $this->adminRepository->update($data, $id);
 
-        Event::fire('user.admin.update.after', $admin);
+        Event::dispatch('user.admin.update.after', $admin);
 
         session()->flash('success', trans('admin::app.response.update-success', ['name' => 'User']));
 
@@ -156,7 +154,7 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View 
+     * @return \Illuminate\Http\Response|\Illuminate\View\View
      */
     public function destroy($id)
     {
@@ -165,10 +163,12 @@ class UserController extends Controller
         if ($this->adminRepository->count() == 1) {
             session()->flash('error', trans('admin::app.response.last-delete-error', ['name' => 'Admin']));
         } else {
-            Event::fire('user.admin.delete.before', $id);
+            Event::dispatch('user.admin.delete.before', $id);
 
             if (auth()->guard('admin')->user()->id == $id) {
-                return view('admin::customers.confirm-password');
+                return response()->json([
+                    'redirect' => route('super.users.confirm', ['id' => $id]),
+                ]);
             }
 
             try {
@@ -176,7 +176,7 @@ class UserController extends Controller
 
                 session()->flash('success', trans('admin::app.response.delete-success', ['name' => 'Admin']));
 
-                Event::fire('user.admin.delete.after', $id);
+                Event::dispatch('user.admin.delete.after', $id);
 
                 return response()->json(['message' => true], 200);
             } catch (Exception $e) {
@@ -188,9 +188,22 @@ class UserController extends Controller
     }
 
     /**
+     * Show the form for confirming the user password.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function confirm($id)
+    {
+        $user = $this->adminRepository->findOrFail($id);
+
+        return view($this->_config['view'], compact('user'));
+    }
+
+    /**
      * destroy current after confirming
      *
-     * @return mixed
+     * @return \Illuminate\Http\Response
      */
     public function destroySelf()
     {
@@ -202,11 +215,11 @@ class UserController extends Controller
             } else {
                 $id = auth()->guard('admin')->user()->id;
 
-                Event::fire('user.admin.delete.before', $id);
+                Event::dispatch('user.admin.delete.before', $id);
 
                 $this->adminRepository->delete($id);
 
-                Event::fire('user.admin.delete.after', $id);
+                Event::dispatch('user.admin.delete.after', $id);
 
                 session()->flash('success', trans('admin::app.users.users.delete-success'));
 

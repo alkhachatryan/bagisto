@@ -31,6 +31,10 @@ return [
         'true' => 'Verdadeiro / Ativo',
         'false' => 'Falso / Inativo',
         'between' => 'Está entre',
-        'apply' => 'Aplicar'
+        'apply' => 'Aplicar',
+        'items-per-page' => 'Itens por página',
+        'value-here' => 'Valor aqui',
+        'numeric-value-here' => 'Valor numérico aqui',
+        'submit' => 'Enviar'
     ]
 ];

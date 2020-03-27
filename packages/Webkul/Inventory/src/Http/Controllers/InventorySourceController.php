@@ -5,12 +5,6 @@ namespace Webkul\Inventory\Http\Controllers;
 use Illuminate\Support\Facades\Event;
 use Webkul\Inventory\Repositories\InventorySourceRepository;
 
-/**
- * Inventory source controller
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class InventorySourceController extends Controller
 {
     /**
@@ -23,7 +17,7 @@ class InventorySourceController extends Controller
     /**
      * InventorySourceRepository object
      *
-     * @var array
+     * @var \Webkul\Inventory\Repositories\InventorySourceRepository
      */
     protected $inventorySourceRepository;
 
@@ -77,18 +71,18 @@ class InventorySourceController extends Controller
             'country'        => 'required',
             'state'          => 'required',
             'city'           => 'required',
-            'postcode'       => 'required'
+            'postcode'       => 'required',
         ]);
 
         $data = request()->all();
 
         $data['status'] = !isset($data['status']) ? 0 : 1;
 
-        Event::fire('inventory.inventory_source.create.before');
+        Event::dispatch('inventory.inventory_source.create.before');
 
         $inventorySource = $this->inventorySourceRepository->create($data);
 
-        Event::fire('inventory.inventory_source.create.after', $inventorySource);
+        Event::dispatch('inventory.inventory_source.create.after', $inventorySource);
 
         session()->flash('success', trans('admin::app.settings.inventory_sources.create-success'));
 
@@ -126,18 +120,18 @@ class InventorySourceController extends Controller
             'country'        => 'required',
             'state'          => 'required',
             'city'           => 'required',
-            'postcode'       => 'required'
+            'postcode'       => 'required',
         ]);
 
         $data = request()->all();
 
         $data['status'] = !isset($data['status']) ? 0 : 1;
 
-        Event::fire('inventory.inventory_source.update.before', $id);
+        Event::dispatch('inventory.inventory_source.update.before', $id);
 
         $inventorySource = $this->inventorySourceRepository->update($data, $id);
 
-        Event::fire('inventory.inventory_source.update.after', $inventorySource);
+        Event::dispatch('inventory.inventory_source.update.after', $inventorySource);
 
         session()->flash('success', trans('admin::app.settings.inventory_sources.update-success'));
 
@@ -158,16 +152,18 @@ class InventorySourceController extends Controller
             session()->flash('error', trans('admin::app.settings.inventory_sources.last-delete-error'));
         } else {
             try {
-                Event::fire('inventory.inventory_source.delete.before', $id);
+                Event::dispatch('inventory.inventory_source.delete.before', $id);
 
                 $this->inventorySourceRepository->delete($id);
 
-                Event::fire('inventory.inventory_source.delete.after', $id);
+                Event::dispatch('inventory.inventory_source.delete.after', $id);
 
                 session()->flash('success', trans('admin::app.settings.inventory_sources.delete-success'));
 
                 return response()->json(['message' => true], 200);
             } catch (\Exception $e) {
+                report($e);
+                
                 session()->flash('error', trans('admin::app.response.delete-failed', ['name' => 'Inventory source']));
             }
         }

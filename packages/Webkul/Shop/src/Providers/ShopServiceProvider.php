@@ -10,12 +10,6 @@ use Webkul\Shop\Http\Middleware\Theme;
 use Webkul\Shop\Http\Middleware\Currency;
 use Webkul\Core\Tree;
 
-/**
- * Shop service provider
- *
- * @author    Jitendra Singh <jitendra@webkul.com>
- * @copyright 2018 Webkul Software Pvt Ltd (http://www.webkul.com)
- */
 class ShopServiceProvider extends ServiceProvider
 {
     /**
@@ -25,6 +19,8 @@ class ShopServiceProvider extends ServiceProvider
      */
     public function boot(Router $router)
     {
+        $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+
         $this->loadRoutesFrom(__DIR__ . '/../Http/routes.php');
 
         $this->loadTranslationsFrom(__DIR__ . '/../Resources/lang', 'shop');

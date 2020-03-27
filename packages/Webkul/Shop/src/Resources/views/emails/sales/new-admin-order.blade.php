@@ -123,7 +123,7 @@
 
                                     @if (isset($item->additional['attributes']))
                                         <div class="item-options">
-                                            
+
                                             @foreach ($item->additional['attributes'] as $attribute)
                                                 <b>{{ $attribute['attribute_name'] }} : </b>{{ $attribute['option_label'] }}</br>
                                             @endforeach
@@ -161,12 +161,14 @@
                 </span>
             </div>
 
+            @foreach (Webkul\Tax\Helpers\Tax::getTaxRatesWithAmount($order, true) as $taxRate => $baseTaxAmount )
             <div>
-                <span>{{ __('shop::app.mail.order.tax') }}</span>
-                <span style="float: right;">
-                    {{ core()->formatBasePrice($order->base_tax_amount) }}
+                <span id="taxrate-{{ core()->taxRateAsIdentifier($taxRate) }}">{{ __('shop::app.mail.order.tax') }} {{ $taxRate }} %</span>
+                <span id="basetaxamount-{{ core()->taxRateAsIdentifier($taxRate) }}" style="float: right;">
+                    {{ core()->formatBasePrice($baseTaxAmount) }}
                 </span>
             </div>
+            @endforeach
 
             @if ($order->discount_amount > 0)
                 <div>
@@ -189,7 +191,7 @@
             <p style="font-size: 16px;color: #5E5E5E;line-height: 24px;">
                 {!!
                     __('shop::app.mail.order.help', [
-                        'support_email' => '<a style="color:#0041FF" href="mailto:' . env('ADMIN_MAIL_TO') . '">' . env('ADMIN_MAIL_TO'). '</a>'
+                        'support_email' => '<a style="color:#0041FF" href="mailto:' . config('mail.admin.address') . '">' . config('mail.admin.address') . '</a>'
                         ])
                 !!}
             </p>

@@ -181,7 +181,7 @@ return [
         'route'      => 'admin.tax-rates.index',
         'sort'       => 2,
         'icon-class' => '',
-    ], (false ? [
+    ], (env('APP_ENV') !== 'production' ? [
         'key' => 'settings.development',
         'name' => 'admin::app.settings.development.title',
         'route' => 'admin.development.index',

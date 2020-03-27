@@ -15,6 +15,6 @@ class CheckIfEnvIsDevelopment
      */
     public function handle($request, Closure $next)
     {
-        return config('app.env') === 'development' ? $next($request) : redirect( route('admin.dashboard.index') );
+        return config('app.env') !== 'production' ? $next($request) : redirect( route('admin.dashboard.index') );
     }
 }

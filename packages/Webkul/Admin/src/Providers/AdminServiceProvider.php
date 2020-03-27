@@ -63,7 +63,7 @@ class AdminServiceProvider extends ServiceProvider
             $allowedPermissions = auth()->guard('admin')->user()->role->permissions;
 
             foreach (config('menu.admin') as $index => $item) {
-                if (! bouncer()->hasPermission($item['key'])) {
+                if (! isset($item['key']) || ! bouncer()->hasPermission($item['key'])) {
                     continue;
                 }
 
@@ -96,7 +96,7 @@ class AdminServiceProvider extends ServiceProvider
         view()->composer(['admin::users.roles.create', 'admin::users.roles.edit'], function ($view) {
             $view->with('acl', $this->createACL());
         });
-        
+
         view()->composer(['admin::catalog.products.create'], function ($view) {
             $items = array();
 

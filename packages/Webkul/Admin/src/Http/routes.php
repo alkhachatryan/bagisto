@@ -761,12 +761,16 @@ Route::group(['middleware' => ['web']], function () {
             });
 
             // Development settings
-            Route::prefix('development')->group(function () {
+            Route::prefix('development')
+                ->middleware('is_development')
+                ->group(function () {
                 Route::get('/', 'Webkul\Admin\Http\Controllers\Development\DashboardController@index')
                     ->name('admin.development.index');
 
-                Route::get('webconsole', 'Webkul\Admin\Http\Controllers\Development\WebConsoleController@index')
-                    ->name('admin.development.webconsole');
+                Route::prefix('tools')->group(function () {
+                    Route::get('webconsole', 'Webkul\Admin\Http\Controllers\Development\WebConsoleController@index')
+                        ->name('admin.development.tools.webconsole');
+                });
             });
         });
     });
